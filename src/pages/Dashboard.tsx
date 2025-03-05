@@ -10,11 +10,20 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
+    console.log('Sign out initiated');
     try {
+      console.log('Calling supabase.auth.signOut()');
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Sign out error:', error);
+        throw error;
+      }
+      
+      console.log('Sign out successful, navigating to login');
       navigate('/login');
     } catch (error: any) {
+      console.error('Sign out caught error:', error);
       toast.error(error.message);
     }
   };
