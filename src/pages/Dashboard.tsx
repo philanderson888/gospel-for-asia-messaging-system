@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users } from 'lucide-react';
+import { LogOut, Users, Database } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -58,6 +58,47 @@ export default function Dashboard() {
     }
   };
 
+  const handleAddToPending = async () => {
+    if (!user?.email || !user?.id) return;
+
+    console.log('\n=== Adding to Pending Table ===');
+    console.log('User:', user.email);
+    
+    const pendingData = {
+      id: user.id,
+      email: user.email,
+      administrator: true,
+      missionary: false,
+      sponsor: false
+    };
+
+    console.log('Data to insert:', pendingData);
+
+    try {
+      const { error } = await supabase
+        .from('pending')
+        .insert([pendingData]);
+
+      if (error) {
+        console.error('Error adding to pending table:', error);
+        console.log('Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        toast.error('Failed to add to pending table');
+        return;
+      }
+
+      console.log('Successfully added to pending table');
+      toast.success('Successfully added to pending table');
+    } catch (error: any) {
+      console.error('Unexpected error:', error);
+      toast.error('An unexpected error occurred');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <nav className="bg-white shadow-sm">
@@ -103,6 +144,16 @@ export default function Dashboard() {
                 Welcome to your dashboard! This is where you'll see your personalized
                 content and settings.
               </p>
+              
+              <div className="mt-8">
+                <button
+                  onClick={handleAddToPending}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <Database className="h-5 w-5 mr-2" />
+                  Add Current User to Pending Table
+                </button>
+              </div>
             </div>
           </div>
         </div>
