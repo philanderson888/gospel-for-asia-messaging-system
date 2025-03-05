@@ -1,14 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { UserPlus } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
+  const { addKnownUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      console.log('\n===============');
+      console.log('Register');
+      console.log('===============\n');
+      isFirstRender.current = false;
+    }
+  }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +34,9 @@ export default function Register() {
 
       if (error) throw error;
 
+      // Add the newly registered user to known users
+      addKnownUser(email);
+      
       toast.success('Registration successful! You can now sign in.');
       navigate('/login');
     } catch (error: any) {

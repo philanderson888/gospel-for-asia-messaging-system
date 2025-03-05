@@ -5,13 +5,15 @@ import { supabase } from '../lib/supabase';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  isAdmin: boolean;
+  knownUsers: string[];
+  addKnownUser: (email: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  isAdmin: false,
+  knownUsers: [],
+  addKnownUser: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -19,94 +21,102 @@ export const useAuth = () => useContext(AuthContext);
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [knownUsers, setKnownUsers] = useState<string[]>([]);
 
-  const checkAdminStatus = async (userId: string) => {
-    console.log('Checking admin status for:', userId);
-    try {
-      const { data, error } = await supabase
-        .from('administrators')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking admin status:', error);
-        return false;
-      }
-
-      console.log('Admin status result:', !!data);
-      return !!data;
-    } catch (error) {
-      console.error('Error in checkAdminStatus:', error);
-      return false;
+  const addKnownUser = (email: string) => {
+    if (!knownUsers.includes(email)) {
+      console.log('Adding known user:', email);
+      setKnownUsers(prev => [...prev, email]);
     }
   };
 
   useEffect(() => {
-    console.log('Auth Provider mounted');
+    console.log('Auth Provider: Starting initialization');
     let mounted = true;
 
+    // Initialize auth state
     const initializeAuth = async () => {
-      console.log('Initializing auth...');
       try {
+        console.log('Auth Provider: Getting session');
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) return;
-
-        if (error) {
-          console.error('Session error:', error);
-          setLoading(false);
+        if (!mounted) {
+          console.log('Auth Provider: Component unmounted during session fetch');
           return;
         }
 
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        
-        if (currentUser) {
-          const adminStatus = await checkAdminStatus(currentUser.id);
-          if (mounted) {
-            setIsAdmin(adminStatus);
+        if (error) {
+          console.error('Auth Provider: Session error:', error);
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        console.log('Auth Provider: Session retrieved', session ? 'with user' : 'no user');
+        if (mounted) {
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+          if (currentUser?.email) {
+            addKnownUser(currentUser.email);
           }
+          setLoading(false);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
-      } finally {
+        console.error('Auth Provider: Initialization error:', error);
         if (mounted) {
+          setUser(null);
           setLoading(false);
         }
       }
     };
 
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      if (!mounted) return;
-
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth Provider: Auth state changed:', event);
       
-      if (currentUser) {
-        const adminStatus = await checkAdminStatus(currentUser.id);
+      if (!mounted) {
+        console.log('Auth Provider: Component unmounted during auth change');
+        return;
+      }
+
+      try {
+        const currentUser = session?.user ?? null;
+        console.log('Auth Provider: Updating user state:', currentUser?.email);
+        setUser(currentUser);
+        if (currentUser?.email) {
+          addKnownUser(currentUser.email);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Auth Provider: Error during auth state change:', error);
         if (mounted) {
-          setIsAdmin(adminStatus);
+          setUser(null);
           setLoading(false);
         }
-      } else {
-        setIsAdmin(false);
-        setLoading(false);
       }
     });
 
+    // Initialize
+    initializeAuth();
+
+    // Cleanup
     return () => {
+      console.log('Auth Provider: Cleaning up');
       mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
+  const value = {
+    user,
+    loading,
+    knownUsers,
+    addKnownUser
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
