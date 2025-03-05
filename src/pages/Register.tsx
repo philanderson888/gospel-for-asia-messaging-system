@@ -10,6 +10,7 @@ export default function Register() {
   const { addKnownUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isAdministrator, setIsAdministrator] = useState(false);
   const [loading, setLoading] = useState(false);
   const isFirstRender = useRef(true);
 
@@ -27,20 +28,37 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('Registration requested for:', email);
+      console.log('Requesting administrator access:', isAdministrator);
+
+      // First sign up the user
+      const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // If administrator role is requested, show toast instead of database operation
+      if (isAdministrator) {
+        console.log('Administrator request would be added to pending table:', {
+          email,
+          administrator: true,
+          missionary: false,
+          sponsor: false
+        });
+        toast.success('Registration successful! Your administrator request has been logged.');
+      } else {
+        toast.success('Registration successful! You can now sign in.');
+      }
 
       // Add the newly registered user to known users
       addKnownUser(email);
       
-      toast.success('Registration successful! You can now sign in.');
       navigate('/login');
     } catch (error: any) {
       toast.error(error.message);
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }
@@ -88,6 +106,20 @@ export default function Register() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="administrator"
+              name="administrator"
+              type="checkbox"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              checked={isAdministrator}
+              onChange={(e) => setIsAdministrator(e.target.checked)}
+            />
+            <label htmlFor="administrator" className="ml-2 block text-sm text-gray-900">
+              Request Administrator Access
+            </label>
           </div>
 
           <div>
