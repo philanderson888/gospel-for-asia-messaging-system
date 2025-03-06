@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AuthenticatedUsers from './pages/AuthenticatedUsers';
 import Administrators from './pages/Administrators';
+import Missionaries from './pages/Missionaries';
+import Sponsors from './pages/Sponsors';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -38,6 +40,22 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <Administrators />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/missionaries"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Missionaries />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/sponsors"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Sponsors />
                 </ProtectedRoute>
               }
             />

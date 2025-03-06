@@ -275,45 +275,49 @@ export default function Dashboard() {
                     </div>
                   </Link>
 
-                  <div className="bg-green-50 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <Users className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
-                              Approved Missionaries
-                            </dt>
-                            <dd className="text-lg font-medium text-green-900">
-                              {userCounts.missionaries}
-                            </dd>
-                          </dl>
+                  <Link to="/missionaries" className="block">
+                    <div className="bg-green-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Users className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Approved Missionaries
+                              </dt>
+                              <dd className="text-lg font-medium text-green-900">
+                                {userCounts.missionaries}
+                              </dd>
+                            </dl>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
-                  <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <Users className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
-                              Approved Sponsors
-                            </dt>
-                            <dd className="text-lg font-medium text-blue-900">
-                              {userCounts.sponsors}
-                            </dd>
-                          </dl>
+                  <Link to="/sponsors" className="block">
+                    <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Users className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Approved Sponsors
+                              </dt>
+                              <dd className="text-lg font-medium text-blue-900">
+                                {userCounts.sponsors}
+                              </dd>
+                            </dl>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
