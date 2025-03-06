@@ -21,15 +21,47 @@ export const supabase = createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: localStorage
+      storage: localStorage,
+      storageKey: 'supabase.auth.token',
+      flowType: 'pkce'
     }
   }
 );
 
-// Debug helper to log request headers
+// Debug helper to log auth state changes and session info
 supabase.auth.onAuthStateChange((event, session) => {
-  console.log('Auth state changed:', event);
+  console.log('\n=== Auth State Change ===');
+  console.log('Event:', event);
+  console.log('Session present:', !!session);
   if (session) {
-    console.log('Session token present:', !!session.access_token);
+    console.log('Access token present:', !!session.access_token);
+    console.log('Token expiry:', new Date(session.expires_at! * 1000).toLocaleString());
+    
+    // Check if token needs refresh (if less than 5 minutes remaining)
+    const expiresIn = session.expires_at! * 1000 - Date.now();
+    if (expiresIn < 300000) { // 5 minutes in milliseconds
+      console.log('Token expiring soon, will auto-refresh');
+    }
   }
 });
+
+// Set up auto-refresh of session
+setInterval(async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    const expiresAt = session.expires_at! * 1000; // convert to milliseconds
+    const now = Date.now();
+    const timeUntilExpiry = expiresAt - now;
+    
+    // If token expires in less than 5 minutes, refresh it
+    if (timeUntilExpiry < 300000) { // 5 minutes in milliseconds
+      console.log('Refreshing session token...');
+      const { error } = await supabase.auth.refreshSession();
+      if (error) {
+        console.error('Error refreshing session:', error);
+      } else {
+        console.log('Session refreshed successfully');
+      }
+    }
+  }
+}, 60000); // Check every minute
