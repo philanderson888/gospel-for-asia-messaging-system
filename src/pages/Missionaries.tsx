@@ -2,18 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, ArrowLeft } from 'lucide-react';
+import { Trash2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Missionary {
   id: string;
   email: string;
   created_at: string;
+  approved: boolean | null;
 }
 
 export default function Missionaries() {
   const { user } = useAuth();
-  const [missionaries, setMissionaries] = useState<Missionary[]>([]);
+  const [pendingMissionaries, setPendingMissionaries] = useState<Missionary[]>([]);
+  const [approvedMissionaries, setApprovedMissionaries] = useState<Missionary[]>([]);
   const [loading, setLoading] = useState(true);
   const isFirstRender = useRef(true);
 
@@ -29,20 +31,37 @@ export default function Missionaries() {
 
   const loadMissionaries = async () => {
     try {
-      const { data, error } = await supabase
+      // Load pending missionaries
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('authenticated_users')
+        .select('*')
+        .eq('is_missionary', true)
+        .is('approved', null)
+        .order('created_at', { ascending: true });
+
+      if (pendingError) throw pendingError;
+
+      // Load approved missionaries
+      const { data: approvedData, error: approvedError } = await supabase
         .from('authenticated_users')
         .select('*')
         .eq('is_missionary', true)
         .eq('approved', true)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (approvedError) throw approvedError;
 
-      setMissionaries(data || []);
+      setPendingMissionaries(pendingData || []);
+      setApprovedMissionaries(approvedData || []);
       
-      // Log current missionaries
-      console.log('\nCurrent missionaries:');
-      (data || []).forEach(missionary => {
+      // Log missionaries
+      console.log('\nPending missionaries:');
+      (pendingData || []).forEach(missionary => {
+        console.log(`- ${missionary.email}`);
+      });
+      
+      console.log('\nApproved missionaries:');
+      (approvedData || []).forEach(missionary => {
         console.log(`- ${missionary.email}`);
       });
       console.log(''); // Empty line for better readability
@@ -51,6 +70,48 @@ export default function Missionaries() {
       console.error('Error loading missionaries:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (missionaryId: string, missionaryEmail: string) => {
+    try {
+      const { error } = await supabase
+        .from('authenticated_users')
+        .update({
+          approved: true,
+          approved_by: user?.id,
+          approved_date_time: new Date().toISOString()
+        })
+        .eq('id', missionaryId);
+
+      if (error) throw error;
+
+      toast.success(`Missionary ${missionaryEmail} approved successfully`);
+      loadMissionaries();
+    } catch (error: any) {
+      toast.error('Failed to approve missionary');
+      console.error('Error approving missionary:', error);
+    }
+  };
+
+  const handleReject = async (missionaryId: string, missionaryEmail: string) => {
+    try {
+      const { error } = await supabase
+        .from('authenticated_users')
+        .update({
+          approved: false,
+          approved_by: user?.id,
+          approved_date_time: new Date().toISOString()
+        })
+        .eq('id', missionaryId);
+
+      if (error) throw error;
+
+      toast.success(`Missionary ${missionaryEmail} rejected`);
+      loadMissionaries();
+    } catch (error: any) {
+      toast.error('Failed to reject missionary');
+      console.error('Error rejecting missionary:', error);
     }
   };
 
@@ -97,9 +158,65 @@ export default function Missionaries() {
             Back to Dashboard
           </Link>
         </div>
+
+        {/* Pending Missionaries Section */}
+        {pendingMissionaries.length > 0 && (
+          <div className="bg-white shadow rounded-lg mb-6">
+            <div className="p-6">
+              <h2 className="text-lg font-medium mb-4 text-yellow-600">Pending Missionaries</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Requested
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingMissionaries.map((missionary) => (
+                      <tr key={missionary.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {missionary.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(missionary.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => handleApprove(missionary.id, missionary.email)}
+                            className="text-green-600 hover:text-green-900 inline-flex items-center"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleReject(missionary.id, missionary.email)}
+                            className="text-red-600 hover:text-red-900 inline-flex items-center ml-2"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Approved Missionaries Section */}
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Current Missionaries</h2>
+            <h2 className="text-lg font-medium mb-4 text-green-600">Approved Missionaries</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -116,7 +233,7 @@ export default function Missionaries() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {missionaries.map((missionary) => (
+                  {approvedMissionaries.map((missionary) => (
                     <tr key={missionary.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {missionary.email}

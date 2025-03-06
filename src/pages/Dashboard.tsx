@@ -109,17 +109,17 @@ export default function Dashboard() {
           // Log user details (limited to 10 per category)
           console.log('\n=== User Statistics ===');
           
-          console.log('\nApproved Administrators:', counts.administrators);
+          console.log('\nAdministrators:', counts.administrators);
           userLists.administrators.slice(0, 10).forEach(admin => {
             console.log(`- ${admin.email}`);
           });
           
-          console.log('\nApproved Missionaries:', counts.missionaries);
+          console.log('\nMissionaries:', counts.missionaries);
           userLists.missionaries.slice(0, 10).forEach(missionary => {
             console.log(`- ${missionary.email}`);
           });
           
-          console.log('\nApproved Sponsors:', counts.sponsors);
+          console.log('\nSponsors:', counts.sponsors);
           userLists.sponsors.slice(0, 10).forEach(sponsor => {
             console.log(`- ${sponsor.email}`);
           });
@@ -263,7 +263,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Approved Administrators
+                                Administrators
                               </dt>
                               <dd className="text-lg font-medium text-indigo-900">
                                 {userCounts.administrators}
@@ -285,7 +285,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Approved Missionaries
+                                Missionaries
                               </dt>
                               <dd className="text-lg font-medium text-green-900">
                                 {userCounts.missionaries}
@@ -307,7 +307,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Approved Sponsors
+                                Sponsors
                               </dt>
                               <dd className="text-lg font-medium text-blue-900">
                                 {userCounts.sponsors}

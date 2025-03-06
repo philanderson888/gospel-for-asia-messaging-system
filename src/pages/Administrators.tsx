@@ -2,18 +2,20 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, ArrowLeft } from 'lucide-react';
+import { Trash2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Administrator {
   id: string;
   email: string;
   created_at: string;
+  approved: boolean | null;
 }
 
 export default function Administrators() {
   const { user } = useAuth();
-  const [administrators, setAdministrators] = useState<Administrator[]>([]);
+  const [pendingAdministrators, setPendingAdministrators] = useState<Administrator[]>([]);
+  const [approvedAdministrators, setApprovedAdministrators] = useState<Administrator[]>([]);
   const [loading, setLoading] = useState(true);
   const isFirstRender = useRef(true);
 
@@ -29,20 +31,37 @@ export default function Administrators() {
 
   const loadAdministrators = async () => {
     try {
-      const { data, error } = await supabase
+      // Load pending administrators
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('authenticated_users')
+        .select('*')
+        .eq('is_administrator', true)
+        .is('approved', null)
+        .order('created_at', { ascending: true });
+
+      if (pendingError) throw pendingError;
+
+      // Load approved administrators
+      const { data: approvedData, error: approvedError } = await supabase
         .from('authenticated_users')
         .select('*')
         .eq('is_administrator', true)
         .eq('approved', true)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (approvedError) throw approvedError;
 
-      setAdministrators(data || []);
+      setPendingAdministrators(pendingData || []);
+      setApprovedAdministrators(approvedData || []);
       
-      // Log current administrators
-      console.log('\nCurrent administrators:');
-      (data || []).forEach(admin => {
+      // Log administrators
+      console.log('\nPending administrators:');
+      (pendingData || []).forEach(admin => {
+        console.log(`- ${admin.email}`);
+      });
+      
+      console.log('\nApproved administrators:');
+      (approvedData || []).forEach(admin => {
         console.log(`- ${admin.email}`);
       });
       console.log(''); // Empty line for better readability
@@ -51,6 +70,48 @@ export default function Administrators() {
       console.error('Error loading administrators:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (adminId: string, adminEmail: string) => {
+    try {
+      const { error } = await supabase
+        .from('authenticated_users')
+        .update({
+          approved: true,
+          approved_by: user?.id,
+          approved_date_time: new Date().toISOString()
+        })
+        .eq('id', adminId);
+
+      if (error) throw error;
+
+      toast.success(`Administrator ${adminEmail} approved successfully`);
+      loadAdministrators();
+    } catch (error: any) {
+      toast.error('Failed to approve administrator');
+      console.error('Error approving administrator:', error);
+    }
+  };
+
+  const handleReject = async (adminId: string, adminEmail: string) => {
+    try {
+      const { error } = await supabase
+        .from('authenticated_users')
+        .update({
+          approved: false,
+          approved_by: user?.id,
+          approved_date_time: new Date().toISOString()
+        })
+        .eq('id', adminId);
+
+      if (error) throw error;
+
+      toast.success(`Administrator ${adminEmail} rejected`);
+      loadAdministrators();
+    } catch (error: any) {
+      toast.error('Failed to reject administrator');
+      console.error('Error rejecting administrator:', error);
     }
   };
 
@@ -102,9 +163,65 @@ export default function Administrators() {
             Back to Dashboard
           </Link>
         </div>
+
+        {/* Pending Administrators Section */}
+        {pendingAdministrators.length > 0 && (
+          <div className="bg-white shadow rounded-lg mb-6">
+            <div className="p-6">
+              <h2 className="text-lg font-medium mb-4 text-yellow-600">Pending Administrators</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Email
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Requested
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {pendingAdministrators.map((admin) => (
+                      <tr key={admin.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {admin.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(admin.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => handleApprove(admin.id, admin.email)}
+                            className="text-green-600 hover:text-green-900 inline-flex items-center"
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleReject(admin.id, admin.email)}
+                            className="text-red-600 hover:text-red-900 inline-flex items-center ml-2"
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Approved Administrators Section */}
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Current Administrators</h2>
+            <h2 className="text-lg font-medium mb-4 text-green-600">Approved Administrators</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -121,7 +238,7 @@ export default function Administrators() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {administrators.map((admin) => (
+                  {approvedAdministrators.map((admin) => (
                     <tr key={admin.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {admin.email}
