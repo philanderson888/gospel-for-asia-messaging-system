@@ -5,12 +5,16 @@ import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { UserPlus } from 'lucide-react';
 
+type UserRole = 'administrator' | 'missionary' | 'sponsor';
+
 export default function Register() {
   const navigate = useNavigate();
   const { addKnownUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isAdministrator, setIsAdministrator] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [sponsorId, setSponsorId] = useState('');
+  const [childId, setChildId] = useState('');
   const [loading, setLoading] = useState(false);
   const isFirstRender = useRef(true);
 
@@ -23,13 +27,53 @@ export default function Register() {
     }
   }, []);
 
+  const validateSponsorFields = () => {
+    if (selectedRole !== 'sponsor') return true;
+    
+    if (!sponsorId || !childId) {
+      toast.error('Sponsor ID and Child ID are required for sponsors');
+      return false;
+    }
+
+    if (!/^\d+$/.test(sponsorId)) {
+      toast.error('Sponsor ID must contain only numbers');
+      return false;
+    }
+
+    if (sponsorId.length > 8) {
+      toast.error('Sponsor ID must be 8 digits or less');
+      return false;
+    }
+
+    if (!/^\d+$/.test(childId)) {
+      toast.error('Child ID must contain only numbers');
+      return false;
+    }
+
+    if (childId.length > 10) {
+      toast.error('Child ID must be 10 digits or less');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       console.log('Registration requested for:', email);
-      console.log('Administrator access requested:', isAdministrator);
+      console.log('Role requested:', selectedRole);
+
+      if (!selectedRole) {
+        throw new Error('Please select a role');
+      }
+
+      if (!validateSponsorFields()) {
+        setLoading(false);
+        return;
+      }
 
       // First sign up the user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -50,12 +94,14 @@ export default function Register() {
           {
             id: signUpData.user.id,
             email: email,
-            is_administrator: isAdministrator,
-            is_missionary: false,
-            is_sponsor: false,
+            is_administrator: selectedRole === 'administrator',
+            is_missionary: selectedRole === 'missionary',
+            is_sponsor: selectedRole === 'sponsor',
             approved: null, // Needs admin approval
             approved_by: null,
-            approved_date_time: null
+            approved_date_time: null,
+            sponsor_id: selectedRole === 'sponsor' ? sponsorId : null,
+            child_id: selectedRole === 'sponsor' ? childId : null
           }
         ]);
 
@@ -76,7 +122,7 @@ export default function Register() {
       setLoading(false);
       
       toast.success(
-        isAdministrator
+        selectedRole === 'administrator'
           ? 'Registration successful! Your administrator request is pending approval. Please sign in.'
           : 'Registration successful! Please sign in to continue.'
       );
@@ -134,28 +180,111 @@ export default function Register() {
             </div>
           </div>
 
-          <div className="flex items-center">
-            <input
-              id="administrator"
-              name="administrator"
-              type="checkbox"
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-              checked={isAdministrator}
-              onChange={(e) => setIsAdministrator(e.target.checked)}
-            />
-            <label htmlFor="administrator" className="ml-2 block text-sm text-gray-900">
-              Request Administrator Access
-            </label>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                id="administrator"
+                name="role"
+                type="radio"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                checked={selectedRole === 'administrator'}
+                onChange={() => setSelectedRole('administrator')}
+              />
+              <label htmlFor="administrator" className="ml-2 block text-sm text-gray-900">
+                Request Administrator Access
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="missionary"
+                name="role"
+                type="radio"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                checked={selectedRole === 'missionary'}
+                onChange={() => setSelectedRole('missionary')}
+              />
+              <label htmlFor="missionary" className="ml-2 block text-sm text-gray-900">
+                Register as Missionary
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                id="sponsor"
+                name="role"
+                type="radio"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                checked={selectedRole === 'sponsor'}
+                onChange={() => setSelectedRole('sponsor')}
+              />
+              <label htmlFor="sponsor" className="ml-2 block text-sm text-gray-900">
+                Register as Sponsor
+              </label>
+            </div>
           </div>
+
+          {/* Sponsor-specific fields */}
+          {selectedRole === 'sponsor' && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <label htmlFor="sponsor-id" className="block text-sm font-medium text-gray-700">
+                  Sponsor ID
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="sponsor-id"
+                    id="sponsor-id"
+                    required
+                    pattern="[0-9]{1,8}"
+                    maxLength={8}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your Sponsor ID (up to 8 digits)"
+                    value={sponsorId}
+                    onChange={(e) => setSponsorId(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Your Sponsor ID can be found in your sponsorship welcome letter (up to 8 digits)
+                </p>
+              </div>
+
+              <div>
+                <label htmlFor="child-id" className="block text-sm font-medium text-gray-700">
+                  Child ID
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="child-id"
+                    id="child-id"
+                    required
+                    pattern="[0-9]{1,10}"
+                    maxLength={10}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter your Child ID (up to 10 digits)"
+                    value={childId}
+                    onChange={(e) => setChildId(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  The Child ID can be found in your sponsorship welcome letter (up to 10 digits)
+                </p>
+              </div>
+            </div>
+          )}
 
           <div>
             <button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={loading || !selectedRole}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                !selectedRole
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+              }`}
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <UserPlus className="h-5 w-5 text-indigo-500 group-hover:text-indigo-400" />
+                <UserPlus className={`h-5 w-5 ${!selectedRole ? 'text-gray-500' : 'text-indigo-500 group-hover:text-indigo-400'}`} />
               </span>
               {loading ? 'Registering...' : 'Register'}
             </button>

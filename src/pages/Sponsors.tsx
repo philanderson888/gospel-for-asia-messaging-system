@@ -10,6 +10,8 @@ interface Sponsor {
   email: string;
   created_at: string;
   approved: boolean | null;
+  sponsor_id: string;
+  child_id: string;
 }
 
 export default function Sponsors() {
@@ -57,12 +59,12 @@ export default function Sponsors() {
       // Log sponsors
       console.log('\nPending sponsors:');
       (pendingData || []).forEach(sponsor => {
-        console.log(`- ${sponsor.email}`);
+        console.log(`- ${sponsor.email} (Sponsor ID: ${sponsor.sponsor_id}, Child ID: ${sponsor.child_id})`);
       });
       
       console.log('\nApproved sponsors:');
       (approvedData || []).forEach(sponsor => {
-        console.log(`- ${sponsor.email}`);
+        console.log(`- ${sponsor.email} (Sponsor ID: ${sponsor.sponsor_id}, Child ID: ${sponsor.child_id})`);
       });
       console.log(''); // Empty line for better readability
     } catch (error: any) {
@@ -172,6 +174,12 @@ export default function Sponsors() {
                         Email
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sponsor ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Child ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Requested
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -184,6 +192,12 @@ export default function Sponsors() {
                       <tr key={sponsor.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {sponsor.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {sponsor.sponsor_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {sponsor.child_id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(sponsor.created_at).toLocaleDateString()}
@@ -225,6 +239,12 @@ export default function Sponsors() {
                       Email
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sponsor ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Child ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Added
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -239,6 +259,12 @@ export default function Sponsors() {
                         {sponsor.email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {sponsor.sponsor_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {sponsor.child_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(sponsor.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -246,7 +272,7 @@ export default function Sponsors() {
                           onClick={() => handleRemoveSponsor(sponsor.id, sponsor.email)}
                           className="text-red-600 hover:text-red-900 inline-flex items-center"
                         >
-                          <Trash2 className="h -4 w-4 mr-1" />
+                          <Trash2 className="h-4 w-4 mr-1" />
                           Remove
                         </button>
                       </td>
