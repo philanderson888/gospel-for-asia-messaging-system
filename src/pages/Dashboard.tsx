@@ -5,61 +5,74 @@ import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 
+interface AuthenticatedUser {
+  id: string;
+  email: string;
+  is_administrator: boolean;
+  is_missionary: boolean;
+  is_sponsor: boolean;
+  approved: boolean | null;
+  approved_by: string | null;
+  approved_date_time: string | null;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    const checkAuthenticatedUsers = async () => {
+    const loadAndCategorizeUsers = async () => {
       try {
         console.log('Fetching authenticated users...');
         const { data, error } = await supabase
           .from('authenticated_users')
-          .select('email');
+          .select('*');
 
         if (error) {
           console.error('Error fetching authenticated users:', error);
           return;
         }
 
-        if (data && data.length > 0) {
-          console.log('\nCurrent authenticated users:', data.map(user => user.email));
+        // Save all users to local storage
+        localStorage.setItem('authenticatedUsers', JSON.stringify(data || []));
+
+        // Categorize users
+        const missionaries = data?.filter(user => user.is_missionary) || [];
+        const sponsors = data?.filter(user => user.is_sponsor) || [];
+        const administrators = data?.filter(user => user.is_administrator) || [];
+
+        // Save categorized lists to local storage
+        localStorage.setItem('missionaries', JSON.stringify(missionaries));
+        localStorage.setItem('sponsors', JSON.stringify(sponsors));
+        localStorage.setItem('administrators', JSON.stringify(administrators));
+
+        // Log the results
+        console.log('\n=== User Categories ===');
+        
+        console.log('\nMissionaries:');
+        if (missionaries.length > 0) {
+          missionaries.forEach(user => console.log(`- ${user.email}`));
         } else {
-          console.log('\nNo authenticated users present');
-        }
-      } catch (error) {
-        console.error('Error checking authenticated users:', error);
-      }
-    };
-
-    // Keeping the function but not calling it for now
-    const checkTestItems = async () => {
-      try {
-        console.log('Fetching test items...');
-        const { data, error } = await supabase
-          .from('test_items')
-          .select('*')
-          .order('id');
-
-        // Log the raw response for debugging
-        console.log('Test items response:', { data, error });
-
-        if (error) {
-          console.error('Error fetching test items:', error);
-          return;
+          console.log('No missionaries present');
         }
 
-        console.log('\nTest Items:');
-        if (data && data.length > 0) {
-          data.forEach(item => {
-            console.log(`- ID: ${item.id}, Text: ${item.text}`);
-          });
+        console.log('\nSponsors:');
+        if (sponsors.length > 0) {
+          sponsors.forEach(user => console.log(`- ${user.email}`));
         } else {
-          console.log('No test items found');
+          console.log('No sponsors present');
         }
+
+        console.log('\nAdministrators:');
+        if (administrators.length > 0) {
+          administrators.forEach(user => console.log(`- ${user.email}`));
+        } else {
+          console.log('No administrators present');
+        }
+
       } catch (error) {
-        console.error('Error checking test items:', error);
+        console.error('Error processing users:', error);
       }
     };
 
@@ -68,8 +81,7 @@ export default function Dashboard() {
       console.log('Dashboard');
       console.log('===============\n');
       console.log('Current user:', user.email);
-      checkAuthenticatedUsers();
-      // checkTestItems(); // Disabled for now
+      loadAndCategorizeUsers();
       isFirstRender.current = false;
     }
   }, [user]);
@@ -82,6 +94,12 @@ export default function Dashboard() {
       if (error) {
         throw error;
       }
+      
+      // Clear local storage on sign out
+      localStorage.removeItem('authenticatedUsers');
+      localStorage.removeItem('missionaries');
+      localStorage.removeItem('sponsors');
+      localStorage.removeItem('administrators');
       
       navigate('/login');
     } catch (error: any) {
