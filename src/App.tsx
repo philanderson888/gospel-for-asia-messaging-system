@@ -8,6 +8,7 @@ import AuthenticatedUsers from './pages/AuthenticatedUsers';
 import Administrators from './pages/Administrators';
 import Missionaries from './pages/Missionaries';
 import Sponsors from './pages/Sponsors';
+import Pending from './pages/Pending';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -56,6 +57,14 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <Sponsors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/pending"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <Pending />
                 </ProtectedRoute>
               }
             />

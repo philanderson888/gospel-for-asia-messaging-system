@@ -319,25 +319,27 @@ export default function Dashboard() {
                     </div>
                   </Link>
 
-                  <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <AlertCircle className="h-6 w-6 text-yellow-600" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
-                              Pending Approval
-                            </dt>
-                            <dd className="text-lg font-medium text-yellow-900">
-                              {userCounts.pending}
-                            </dd>
-                          </dl>
+                  <Link to="/pending" className="block">
+                    <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <AlertCircle className="h-6 w-6 text-yellow-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Pending Approval
+                              </dt>
+                              <dd className="text-lg font-medium text-yellow-900">
+                                {userCounts.pending}
+                              </dd>
+                            </dl>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               )}
             </div>
