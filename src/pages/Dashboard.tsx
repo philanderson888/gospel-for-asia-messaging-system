@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16,82 +16,122 @@ interface AuthenticatedUser {
   approved_date_time: string | null;
 }
 
+interface UserCounts {
+  administrators: number;
+  missionaries: number;
+  sponsors: number;
+  pending: number;
+}
+
+interface UserLists {
+  administrators: AuthenticatedUser[];
+  missionaries: AuthenticatedUser[];
+  sponsors: AuthenticatedUser[];
+  pending: AuthenticatedUser[];
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
-  const [currentUserApproved, setCurrentUserApproved] = useState<boolean | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userCounts, setUserCounts] = useState<UserCounts>({
+    administrators: 0,
+    missionaries: 0,
+    sponsors: 0,
+    pending: 0
+  });
 
   useEffect(() => {
-    const checkUserApprovalAndLoadData = async () => {
+    const checkUserStatusAndLoadData = async () => {
       if (!user) return;
 
       try {
-        console.log('\n=== Checking User Approval Status ===');
-        // First check the current user's approval status
+        console.log('\n=== Checking User Status ===');
+        // First check the current user's status
         const { data: userData, error: userError } = await supabase
           .from('authenticated_users')
-          .select('approved')
+          .select('*')
           .eq('id', user.id)
           .single();
 
         if (userError) {
-          console.error('Error fetching user approval status:', userError);
+          console.error('Error fetching user status:', userError);
           return;
         }
 
-        console.log('User approval status:', userData?.approved);
-        setCurrentUserApproved(userData?.approved);
+        setCurrentUser(userData);
+        console.log('Current user status:', userData);
 
         // Only load other users if the current user is approved
         if (userData?.approved) {
           console.log('User is approved, fetching all users...');
-          const { data, error } = await supabase
+          const { data: allUsers, error } = await supabase
             .from('authenticated_users')
-            .select('*');
+            .select('*')
+            .order('email', { ascending: true });
 
           if (error) {
             console.error('Error fetching authenticated users:', error);
             return;
           }
 
-          // Save all users to local storage
-          localStorage.setItem('authenticatedUsers', JSON.stringify(data || []));
-
           // Categorize users
-          const missionaries = data?.filter(user => user.is_missionary) || [];
-          const sponsors = data?.filter(user => user.is_sponsor) || [];
-          const administrators = data?.filter(user => user.is_administrator) || [];
+          const userLists: UserLists = {
+            administrators: [],
+            missionaries: [],
+            sponsors: [],
+            pending: []
+          };
 
-          // Save categorized lists to local storage
-          localStorage.setItem('missionaries', JSON.stringify(missionaries));
-          localStorage.setItem('sponsors', JSON.stringify(sponsors));
-          localStorage.setItem('administrators', JSON.stringify(administrators));
+          allUsers?.forEach(user => {
+            if (user.approved === null || user.approved === false) {
+              userLists.pending.push(user);
+            } else {
+              // User is approved, add to respective role lists
+              if (user.is_administrator) userLists.administrators.push(user);
+              if (user.is_missionary) userLists.missionaries.push(user);
+              if (user.is_sponsor) userLists.sponsors.push(user);
+            }
+          });
 
-          // Log the results
-          console.log('\n=== User Categories ===');
+          // Set counts
+          const counts: UserCounts = {
+            administrators: userLists.administrators.length,
+            missionaries: userLists.missionaries.length,
+            sponsors: userLists.sponsors.length,
+            pending: userLists.pending.length
+          };
+
+          setUserCounts(counts);
+
+          // Log user details (limited to 10 per category)
+          console.log('\n=== User Statistics ===');
           
-          console.log('\nMissionaries:');
-          if (missionaries.length > 0) {
-            missionaries.forEach(user => console.log(`- ${user.email}`));
-          } else {
-            console.log('No missionaries present');
-          }
-
-          console.log('\nSponsors:');
-          if (sponsors.length > 0) {
-            sponsors.forEach(user => console.log(`- ${user.email}`));
-          } else {
-            console.log('No sponsors present');
-          }
-
-          console.log('\nAdministrators:');
-          if (administrators.length > 0) {
-            administrators.forEach(user => console.log(`- ${user.email}`));
-          } else {
-            console.log('No administrators present');
-          }
+          console.log('\nApproved Administrators:', counts.administrators);
+          userLists.administrators.slice(0, 10).forEach(admin => {
+            console.log(`- ${admin.email}`);
+          });
+          
+          console.log('\nApproved Missionaries:', counts.missionaries);
+          userLists.missionaries.slice(0, 10).forEach(missionary => {
+            console.log(`- ${missionary.email}`);
+          });
+          
+          console.log('\nApproved Sponsors:', counts.sponsors);
+          userLists.sponsors.slice(0, 10).forEach(sponsor => {
+            console.log(`- ${sponsor.email}`);
+          });
+          
+          console.log('\nPending Approval:', counts.pending);
+          userLists.pending.slice(0, 10).forEach(pending => {
+            console.log(`- ${pending.email} (${[
+              pending.is_administrator ? 'Administrator' : '',
+              pending.is_missionary ? 'Missionary' : '',
+              pending.is_sponsor ? 'Sponsor' : ''
+            ].filter(Boolean).join(', ')})`);
+          });
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -105,7 +145,7 @@ export default function Dashboard() {
       console.log('Dashboard');
       console.log('===============\n');
       console.log('Current user:', user.email);
-      checkUserApprovalAndLoadData();
+      checkUserStatusAndLoadData();
       isFirstRender.current = false;
     }
   }, [user]);
@@ -118,12 +158,6 @@ export default function Dashboard() {
       if (error) {
         throw error;
       }
-      
-      // Clear local storage on sign out
-      localStorage.removeItem('authenticatedUsers');
-      localStorage.removeItem('missionaries');
-      localStorage.removeItem('sponsors');
-      localStorage.removeItem('administrators');
       
       navigate('/login');
     } catch (error: any) {
@@ -151,13 +185,13 @@ export default function Dashboard() {
               </Link>
             </div>
             <div className="flex items-center space-x-4">
-              {currentUserApproved && (
+              {currentUser?.approved && currentUser.is_administrator && (
                 <Link
                   to="/authenticated-users"
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                 >
                   <Users className="h-4 w-4 mr-2" />
-                  Manage Authenticated Users
+                  Manage Users
                 </Link>
               )}
               <div className="flex items-center space-x-2">
@@ -177,7 +211,7 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {!currentUserApproved ? (
+          {!currentUser?.approved ? (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
               <div className="flex">
                 <div className="flex-shrink-0">
@@ -185,25 +219,29 @@ export default function Dashboard() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-yellow-700">
-                    Your account is pending approval. You won't be able to access user information
+                    Your account is pending approval. You won't be able to access system features
                     until an administrator approves your account.
                   </p>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-green-400" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-700">
-                    Your account is approved. You have full access to the system.
-                  </p>
+            currentUser && !currentUser.is_administrator && (
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <UserCheck className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">
+                      Your account is approved. You have access to the system as a
+                      {currentUser.is_missionary && ' Missionary'}
+                      {currentUser.is_sponsor && ' Sponsor'}.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )
           )}
           
           <div className="bg-white shadow rounded-lg p-6">
@@ -212,14 +250,89 @@ export default function Dashboard() {
               <p className="text-gray-600">
                 You are signed in as <span className="font-medium">{user?.email}</span>
               </p>
-              {currentUserApproved ? (
-                <p className="text-gray-600">
-                  Welcome to your dashboard! Here you can manage users and access all system features.
-                </p>
-              ) : (
-                <p className="text-gray-600">
-                  Your account is currently pending approval. Once approved, you'll have access to all system features.
-                </p>
+
+              {currentUser?.approved && currentUser.is_administrator && (
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <Users className="h-6 w-6 text-indigo-600" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              Approved Administrators
+                            </dt>
+                            <dd className="text-lg font-medium text-indigo-900">
+                              {userCounts.administrators}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <Users className="h-6 w-6 text-green-600" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              Approved Missionaries
+                            </dt>
+                            <dd className="text-lg font-medium text-green-900">
+                              {userCounts.missionaries}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <Users className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              Approved Sponsors
+                            </dt>
+                            <dd className="text-lg font-medium text-blue-900">
+                              {userCounts.sponsors}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <AlertCircle className="h-6 w-6 text-yellow-600" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              Pending Approval
+                            </dt>
+                            <dd className="text-lg font-medium text-yellow-900">
+                              {userCounts.pending}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
