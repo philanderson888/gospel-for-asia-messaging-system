@@ -29,31 +29,49 @@ export default function Register() {
 
     try {
       console.log('Registration requested for:', email);
-      console.log('Requesting administrator access:', isAdministrator);
+      console.log('Administrator access requested:', isAdministrator);
 
       // First sign up the user
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (signUpError) throw signUpError;
 
-      // If administrator role is requested, show toast instead of database operation
-      if (isAdministrator) {
-        console.log('Administrator request would be added to pending table:', {
-          email,
-          administrator: true,
-          missionary: false,
-          sponsor: false
-        });
-        toast.success('Registration successful! Your administrator request has been logged.');
-      } else {
-        toast.success('Registration successful! You can now sign in.');
+      if (!signUpData.user) {
+        throw new Error('User registration failed');
+      }
+
+      // Add the user to authenticated_users table
+      const { error: insertError } = await supabase
+        .from('authenticated_users')
+        .insert([
+          {
+            id: signUpData.user.id,
+            email: email,
+            is_administrator: isAdministrator,
+            is_missionary: false,
+            is_sponsor: false,
+            approved: null,
+            approved_by: null,
+            approved_date_time: null
+          }
+        ]);
+
+      if (insertError) {
+        console.error('Error adding to authenticated_users:', insertError);
+        throw new Error('Failed to complete registration process');
       }
 
       // Add the newly registered user to known users
       addKnownUser(email);
+      
+      toast.success(
+        isAdministrator
+          ? 'Registration successful! Your administrator request is pending approval.'
+          : 'Registration successful! You can now sign in.'
+      );
       
       navigate('/login');
     } catch (error: any) {
