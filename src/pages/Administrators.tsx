@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, UserPlus, Database } from 'lucide-react';
+import { Trash2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Administrator {
@@ -12,12 +12,9 @@ interface Administrator {
 }
 
 export default function Administrators() {
-  const { user, knownUsers } = useAuth();
+  const { user } = useAuth();
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState('');
-  const [addingAdmin, setAddingAdmin] = useState(false);
-  const [addingPending, setAddingPending] = useState(false);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -33,8 +30,10 @@ export default function Administrators() {
   const loadAdministrators = async () => {
     try {
       const { data, error } = await supabase
-        .from('administrators')
+        .from('authenticated_users')
         .select('*')
+        .eq('is_administrator', true)
+        .eq('approved', true)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -55,91 +54,6 @@ export default function Administrators() {
     }
   };
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddingAdmin(true);
-
-    console.log(`Add Administrator requested for user: ${email}`);
-
-    try {
-      // Check if user exists in known users
-      const userExists = knownUsers.includes(email);
-      console.log(userExists 
-        ? 'User is present on the system so adding them to administrators' 
-        : 'User is not present on the system so not possible to add them as administrator'
-      );
-      
-      if (!userExists) {
-        toast.error('Cannot add administrator: User does not exist in the system');
-        return;
-      }
-
-      const { error: insertError } = await supabase
-        .from('administrators')
-        .insert([
-          {
-            email: email,
-          },
-        ]);
-
-      if (insertError) throw insertError;
-
-      toast.success('Administrator added successfully');
-      setEmail('');
-      loadAdministrators();
-    } catch (error: any) {
-      toast.error('Failed to add administrator');
-      console.error('Error adding administrator:', error);
-    } finally {
-      setAddingAdmin(false);
-    }
-  };
-
-  const handleAddToPending = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setAddingPending(true);
-    console.log('\n=== Adding to Pending Table ===');
-    console.log('Email:', email);
-    
-    const pendingData = {
-      email: email,
-      administrator: true,
-      missionary: false,
-      sponsor: false
-    };
-
-    console.log('Data to insert:', pendingData);
-
-    try {
-      const { error } = await supabase
-        .from('pending')
-        .insert([pendingData]);
-
-      if (error) {
-        console.error('Error adding to pending table:', error);
-        console.log('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        toast.error('Failed to add to pending table');
-        return;
-      }
-
-      console.log('Successfully added to pending table');
-      toast.success('Successfully added to pending table');
-      setEmail('');
-    } catch (error: any) {
-      console.error('Unexpected error:', error);
-      toast.error('An unexpected error occurred');
-    } finally {
-      setAddingPending(false);
-    }
-  };
-
   const handleRemoveAdmin = async (adminId: string, adminEmail: string) => {
     if (adminId === user?.id) {
       toast.error("You can't remove yourself as an administrator");
@@ -154,8 +68,8 @@ export default function Administrators() {
 
     try {
       const { error } = await supabase
-        .from('administrators')
-        .delete()
+        .from('authenticated_users')
+        .update({ is_administrator: false })
         .eq('id', adminId);
 
       if (error) throw error;
@@ -178,52 +92,17 @@ export default function Administrators() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <Link to="/" className="text-xl font-semibold text-gray-900 hover:text-indigo-600">
-                Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
-          <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Add Administrator</h2>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <input
-                  type="email"
-                  placeholder="Enter user email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-                <button
-                  onClick={handleAddAdmin}
-                  disabled={addingAdmin}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  {addingAdmin ? 'Adding...' : 'Add Administrator'}
-                </button>
-                <button
-                  onClick={handleAddToPending}
-                  disabled={addingPending}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  {addingPending ? 'Adding...' : 'Add to Pending'}
-                </button>
-              </div>
-            </div>
-          </div>
-
+        <div className="px-4 sm:px-0 mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center text-indigo-600 hover:text-indigo-500"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Link>
+        </div>
+        <div className="bg-white shadow rounded-lg">
           <div className="p-6">
             <h2 className="text-lg font-medium mb-4">Current Administrators</h2>
             <div className="overflow-x-auto">

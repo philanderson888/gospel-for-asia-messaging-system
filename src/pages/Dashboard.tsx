@@ -253,25 +253,27 @@ export default function Dashboard() {
 
               {currentUser?.approved && currentUser.is_administrator && (
                 <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <Users className="h-6 w-6 text-indigo-600" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
-                              Approved Administrators
-                            </dt>
-                            <dd className="text-lg font-medium text-indigo-900">
-                              {userCounts.administrators}
-                            </dd>
-                          </dl>
+                  <Link to="/administrators" className="block">
+                    <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Users className="h-6 w-6 text-indigo-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Approved Administrators
+                              </dt>
+                              <dd className="text-lg font-medium text-indigo-900">
+                                {userCounts.administrators}
+                              </dd>
+                            </dl>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="bg-green-50 overflow-hidden shadow rounded-lg">
                     <div className="p-5">
