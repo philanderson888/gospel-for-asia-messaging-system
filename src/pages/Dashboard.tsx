@@ -23,12 +23,61 @@ export default function Dashboard() {
         }
 
         if (data && data.length > 0) {
-          console.log('Current administrators:', data.map(admin => admin.email));
+          console.log('\nCurrent administrators:', data.map(admin => admin.email));
         } else {
-          console.log('No administrators present');
+          console.log('\nNo administrators present');
         }
       } catch (error) {
         console.error('Error checking administrators:', error);
+      }
+    };
+
+    const checkPendingUsers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('pending')
+          .select('email, administrator, missionary, sponsor');
+
+        if (error) {
+          console.error('Error fetching pending users:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          console.log('\nPending requests:');
+          data.forEach(request => {
+            console.log(`- ${request.email} (Administrator: ${request.administrator}, Missionary: ${request.missionary}, Sponsor: ${request.sponsor})`);
+          });
+        } else {
+          console.log('\nNo pending requests');
+        }
+      } catch (error) {
+        console.error('Error checking pending users:', error);
+      }
+    };
+
+    const checkTestItems = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('test_items')
+          .select('*')
+          .order('id');
+
+        if (error) {
+          console.error('Error fetching test items:', error);
+          return;
+        }
+
+        console.log('\nTest Items:');
+        if (data && data.length > 0) {
+          data.forEach(item => {
+            console.log(`- ID: ${item.id}, Text: ${item.text}`);
+          });
+        } else {
+          console.log('No test items found');
+        }
+      } catch (error) {
+        console.error('Error checking test items:', error);
       }
     };
 
@@ -38,6 +87,8 @@ export default function Dashboard() {
       console.log('===============\n');
       console.log('Current user:', user.email);
       checkAdministrators();
+      checkPendingUsers();
+      checkTestItems();
       isFirstRender.current = false;
     }
   }, [user]);
