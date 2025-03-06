@@ -33,7 +33,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   const checkAdminStatus = async (userId: string) => {
     try {
       const { data, error } = await supabase
-        .from('administrators')
+        .from('authenticated_users')
         .select('id')
         .eq('id', userId)
         .single();

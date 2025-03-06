@@ -11,50 +11,25 @@ export default function Dashboard() {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    const checkAdministrators = async () => {
+    const checkAuthenticatedUsers = async () => {
       try {
-        console.log('Fetching administrators...');
+        console.log('Fetching authenticated users...');
         const { data, error } = await supabase
-          .from('administrators')
+          .from('authenticated_users')
           .select('email');
 
         if (error) {
-          console.error('Error fetching administrators:', error);
+          console.error('Error fetching authenticated users:', error);
           return;
         }
 
         if (data && data.length > 0) {
-          console.log('\nCurrent administrators:', data.map(admin => admin.email));
+          console.log('\nCurrent authenticated users:', data.map(user => user.email));
         } else {
-          console.log('\nNo administrators present');
+          console.log('\nNo authenticated users present');
         }
       } catch (error) {
-        console.error('Error checking administrators:', error);
-      }
-    };
-
-    const checkAuthorisedUsers = async () => {
-      try {
-        console.log('Fetching authorised users...');
-        const { data, error } = await supabase
-          .from('authorised_users')
-          .select('email');
-
-        // Log the raw response for debugging
-        console.log('Authorised users response:', { data, error });
-
-        if (error) {
-          console.error('Error fetching authorised users:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.log('\nAuthorised users:', data.map(user => user.email));
-        } else {
-          console.log('\nNo authorised users found');
-        }
-      } catch (error) {
-        console.error('Error checking authorised users:', error);
+        console.error('Error checking authenticated users:', error);
       }
     };
 
@@ -120,10 +95,9 @@ export default function Dashboard() {
       console.log('Dashboard');
       console.log('===============\n');
       console.log('Current user:', user.email);
-      checkAuthorisedUsers();
-      //checkAdministrators();
-      //checkPendingUsers();
-      //checkTestItems();
+      checkAuthenticatedUsers();
+      checkPendingUsers();
+      checkTestItems();
       isFirstRender.current = false;
     }
   }, [user]);
@@ -197,11 +171,11 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <Link
-                to="/administrators"
+                to="/authenticated-users"
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
               >
                 <Users className="h-4 w-4 mr-2" />
-                Manage Administrators
+                Manage Authenticated Users
               </Link>
               <div className="flex items-center space-x-2">
                 <span className="text-gray-600">{user?.email}</span>

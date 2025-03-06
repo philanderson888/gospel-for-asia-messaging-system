@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Administrators from './pages/Administrators';
+import AuthenticatedUsers from './pages/AuthenticatedUsers';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -25,10 +25,10 @@ function App() {
               }
             />
             <Route
-              path="/administrators"
+              path="/authenticated-users"
               element={
                 <ProtectedRoute>
-                  <Administrators />
+                  <AuthenticatedUsers />
                 </ProtectedRoute>
               }
             />
