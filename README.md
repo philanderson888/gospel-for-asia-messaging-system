@@ -16,6 +16,26 @@ A secure, role-based mission management application built with React, TypeScript
 
 [Edit in StackBlitz next generation editor ⚡️](https://stackblitz.com/~/github.com/philanderson888/gospel-for-asia-messaging-system)
 
+## 🎯 Project Goals
+
+The Mission Management System aims to modernize and streamline communication between sponsors and their sponsored children. Key objectives include:
+
+- Replacing traditional paper-based communication with a secure digital platform
+- Enabling faster, more efficient communication between sponsors and children
+- Maintaining system integrity through verified sponsor registration
+- Supporting missionaries in their communication and coordination efforts
+
+### Sponsor Registration Process
+
+To ensure system security and data integrity, sponsors must complete a verification process:
+
+1. Sponsors receive a welcome letter containing:
+   - A unique Sponsor ID
+   - Their sponsored Child's ID
+2. These IDs must be provided during registration
+3. This two-factor verification helps prevent unauthorized access
+4. Only verified sponsors can access the communication platform
+
 ## 🚀 Features
 
 ### Authentication & Authorization
@@ -50,9 +70,9 @@ A secure, role-based mission management application built with React, TypeScript
 
 ### Dashboard Features
 - ✅ Real-time user statistics for administrators:
-  - Count of approved administrators
-  - Count of approved missionaries
-  - Count of approved sponsors
+  - Count of administrators
+  - Count of missionaries
+  - Count of sponsors
   - Count of pending approvals
 - ✅ Role-specific welcome messages
 - ✅ Clean, intuitive interface
@@ -75,6 +95,7 @@ A secure, role-based mission management application built with React, TypeScript
 - Role-based access control (RBAC)
 - Database row-level security (RLS)
 - Secure password handling
+- Two-factor verification for sponsors (Sponsor ID + Child ID)
 
 ## 🌱 Project Status
 
