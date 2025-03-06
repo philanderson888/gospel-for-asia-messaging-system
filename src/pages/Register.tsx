@@ -31,14 +31,10 @@ export default function Register() {
       console.log('Registration requested for:', email);
       console.log('Administrator access requested:', isAdministrator);
 
-      // Sign up the user but don't sign them in automatically
+      // First sign up the user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          // Prevent automatic sign in after registration
-          emailRedirectTo: `${window.location.origin}/login`
-        }
       });
 
       if (signUpError) throw signUpError;
@@ -71,8 +67,13 @@ export default function Register() {
       // Add the newly registered user to known users
       addKnownUser(email);
       
-      // Sign out any existing session to ensure clean state
-      await supabase.auth.signOut();
+      // Immediately sign out the user
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.error('Error signing out:', signOutError);
+      }
+
+      setLoading(false);
       
       toast.success(
         isAdministrator
@@ -80,13 +81,12 @@ export default function Register() {
           : 'Registration successful! Please sign in to continue.'
       );
       
-      // Always redirect to login page
+      // Navigate to login page
       navigate('/login');
     } catch (error: any) {
+      setLoading(false);
       toast.error(error.message);
       console.error('Registration error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
