@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, UserPlus, ArrowLeft } from 'lucide-react';
+import { Trash2, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface AuthenticatedUser {
@@ -15,8 +15,6 @@ export default function AuthenticatedUsers() {
   const { user } = useAuth();
   const [authenticatedUsers, setAuthenticatedUsers] = useState<AuthenticatedUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [email, setEmail] = useState('');
-  const [addingUser, setAddingUser] = useState(false);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -51,34 +49,6 @@ export default function AuthenticatedUsers() {
       console.error('Error loading authenticated users:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleAddUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setAddingUser(true);
-
-    console.log(`Add Authenticated User requested for user: ${email}`);
-
-    try {
-      const { error: insertError } = await supabase
-        .from('authenticated_users')
-        .insert([
-          {
-            email: email,
-          },
-        ]);
-
-      if (insertError) throw insertError;
-
-      toast.success('User added successfully');
-      setEmail('');
-      loadAuthenticatedUsers();
-    } catch (error: any) {
-      toast.error('Failed to add user');
-      console.error('Error adding user:', error);
-    } finally {
-      setAddingUser(false);
     }
   };
 
@@ -130,31 +100,7 @@ export default function AuthenticatedUsers() {
             Back to Dashboard
           </Link>
         </div>
-        <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
-          <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Add Authenticated User</h2>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <input
-                  type="email"
-                  placeholder="Enter user email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required
-                />
-                <button
-                  onClick={handleAddUser}
-                  disabled={addingUser}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  {addingUser ? 'Adding...' : 'Add User'}
-                </button>
-              </div>
-            </div>
-          </div>
-
+        <div className="bg-white shadow rounded-lg">
           <div className="p-6">
             <h2 className="text-lg font-medium mb-4">Current Authenticated Users</h2>
             <div className="overflow-x-auto">
