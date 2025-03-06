@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, Database } from 'lucide-react';
+import { LogOut, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -33,34 +33,7 @@ export default function Dashboard() {
       }
     };
 
-    const checkPendingUsers = async () => {
-      try {
-        console.log('Fetching pending users...');
-        const { data, error } = await supabase
-          .from('pending')
-          .select('email, administrator, missionary, sponsor');
-
-        // Log the raw response for debugging
-        console.log('Pending users response:', { data, error });
-
-        if (error) {
-          console.error('Error fetching pending users:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.log('\nPending requests:');
-          data.forEach(request => {
-            console.log(`- ${request.email} (Administrator: ${request.administrator}, Missionary: ${request.missionary}, Sponsor: ${request.sponsor})`);
-          });
-        } else {
-          console.log('\nNo pending requests');
-        }
-      } catch (error) {
-        console.error('Error checking pending users:', error);
-      }
-    };
-
+    // Keeping the function but not calling it for now
     const checkTestItems = async () => {
       try {
         console.log('Fetching test items...');
@@ -96,8 +69,7 @@ export default function Dashboard() {
       console.log('===============\n');
       console.log('Current user:', user.email);
       checkAuthenticatedUsers();
-      checkPendingUsers();
-      checkTestItems();
+      // checkTestItems(); // Disabled for now
       isFirstRender.current = false;
     }
   }, [user]);
@@ -115,47 +87,6 @@ export default function Dashboard() {
     } catch (error: any) {
       console.error('Sign out error:', error);
       toast.error(error.message);
-    }
-  };
-
-  const handleAddToPending = async () => {
-    if (!user?.email || !user?.id) return;
-
-    console.log('\n=== Adding to Pending Table ===');
-    console.log('User:', user.email);
-    
-    const pendingData = {
-      id: user.id,
-      email: user.email,
-      administrator: true,
-      missionary: false,
-      sponsor: false
-    };
-
-    console.log('Data to insert:', pendingData);
-
-    try {
-      const { error } = await supabase
-        .from('pending')
-        .insert([pendingData]);
-
-      if (error) {
-        console.error('Error adding to pending table:', error);
-        console.log('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        toast.error('Failed to add to pending table');
-        return;
-      }
-
-      console.log('Successfully added to pending table');
-      toast.success('Successfully added to pending table');
-    } catch (error: any) {
-      console.error('Unexpected error:', error);
-      toast.error('An unexpected error occurred');
     }
   };
 
@@ -204,16 +135,6 @@ export default function Dashboard() {
                 Welcome to your dashboard! This is where you'll see your personalized
                 content and settings.
               </p>
-              
-              <div className="mt-8">
-                <button
-                  onClick={handleAddToPending}
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Database className="h-5 w-5 mr-2" />
-                  Add Current User to Pending Table
-                </button>
-              </div>
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, UserPlus, Database, ArrowLeft } from 'lucide-react';
+import { Trash2, UserPlus, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface AuthenticatedUser {
@@ -17,7 +17,6 @@ export default function AuthenticatedUsers() {
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
   const [addingUser, setAddingUser] = useState(false);
-  const [addingPending, setAddingPending] = useState(false);
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -92,51 +91,6 @@ export default function AuthenticatedUsers() {
       console.error('Error adding user:', error);
     } finally {
       setAddingUser(false);
-    }
-  };
-
-  const handleAddToPending = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-
-    setAddingPending(true);
-    console.log('\n=== Adding to Pending Table ===');
-    console.log('Email:', email);
-    
-    const pendingData = {
-      email: email,
-      administrator: true,
-      missionary: false,
-      sponsor: false
-    };
-
-    console.log('Data to insert:', pendingData);
-
-    try {
-      const { error } = await supabase
-        .from('pending')
-        .insert([pendingData]);
-
-      if (error) {
-        console.error('Error adding to pending table:', error);
-        console.log('Error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        toast.error('Failed to add to pending table');
-        return;
-      }
-
-      console.log('Successfully added to pending table');
-      toast.success('Successfully added to pending table');
-      setEmail('');
-    } catch (error: any) {
-      console.error('Unexpected error:', error);
-      toast.error('An unexpected error occurred');
-    } finally {
-      setAddingPending(false);
     }
   };
 
@@ -228,14 +182,6 @@ export default function AuthenticatedUsers() {
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   {addingUser ? 'Adding...' : 'Add User'}
-                </button>
-                <button
-                  onClick={handleAddToPending}
-                  disabled={addingPending}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  <Database className="h-4 w-4 mr-2" />
-                  {addingPending ? 'Adding...' : 'Add to Pending'}
                 </button>
               </div>
             </div>
