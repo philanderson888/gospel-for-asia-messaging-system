@@ -13,6 +13,7 @@ export default function Dashboard() {
   useEffect(() => {
     const checkAdministrators = async () => {
       try {
+        console.log('Fetching administrators...');
         const { data, error } = await supabase
           .from('administrators')
           .select('email');
@@ -32,11 +33,40 @@ export default function Dashboard() {
       }
     };
 
+    const checkAuthorisedUsers = async () => {
+      try {
+        console.log('Fetching authorised users...');
+        const { data, error } = await supabase
+          .from('authorised_users')
+          .select('email');
+
+        // Log the raw response for debugging
+        console.log('Authorised users response:', { data, error });
+
+        if (error) {
+          console.error('Error fetching authorised users:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          console.log('\nAuthorised users:', data.map(user => user.email));
+        } else {
+          console.log('\nNo authorised users found');
+        }
+      } catch (error) {
+        console.error('Error checking authorised users:', error);
+      }
+    };
+
     const checkPendingUsers = async () => {
       try {
+        console.log('Fetching pending users...');
         const { data, error } = await supabase
           .from('pending')
           .select('email, administrator, missionary, sponsor');
+
+        // Log the raw response for debugging
+        console.log('Pending users response:', { data, error });
 
         if (error) {
           console.error('Error fetching pending users:', error);
@@ -58,10 +88,14 @@ export default function Dashboard() {
 
     const checkTestItems = async () => {
       try {
+        console.log('Fetching test items...');
         const { data, error } = await supabase
           .from('test_items')
           .select('*')
           .order('id');
+
+        // Log the raw response for debugging
+        console.log('Test items response:', { data, error });
 
         if (error) {
           console.error('Error fetching test items:', error);
@@ -86,9 +120,10 @@ export default function Dashboard() {
       console.log('Dashboard');
       console.log('===============\n');
       console.log('Current user:', user.email);
-      checkAdministrators();
-      checkPendingUsers();
-      checkTestItems();
+      checkAuthorisedUsers();
+      //checkAdministrators();
+      //checkPendingUsers();
+      //checkTestItems();
       isFirstRender.current = false;
     }
   }, [user]);
