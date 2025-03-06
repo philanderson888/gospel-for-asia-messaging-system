@@ -27,7 +27,7 @@ function App() {
             <Route
               path="/authenticated-users"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <AuthenticatedUsers />
                 </ProtectedRoute>
               }
@@ -40,4 +40,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

@@ -12,7 +12,7 @@ interface AuthenticatedUser {
 }
 
 export default function AuthenticatedUsers() {
-  const { user, isAdmin, checkUserExists } = useAuth();
+  const { user } = useAuth();
   const [authenticatedUsers, setAuthenticatedUsers] = useState<AuthenticatedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState('');
@@ -61,18 +61,6 @@ export default function AuthenticatedUsers() {
     console.log(`Add Authenticated User requested for user: ${email}`);
 
     try {
-      // Check if user exists in Supabase
-      const userExists = await checkUserExists(email);
-      console.log(userExists 
-        ? 'User is present on the system so adding them to authenticated users' 
-        : 'User is not present on the system so not possible to add them as authenticated user'
-      );
-      
-      if (!userExists) {
-        toast.error('Cannot add user: User does not exist in the system');
-        return;
-      }
-
       const { error: insertError } = await supabase
         .from('authenticated_users')
         .insert([
@@ -96,12 +84,12 @@ export default function AuthenticatedUsers() {
 
   const handleRemoveUser = async (userId: string, userEmail: string) => {
     if (userId === user?.id) {
-      toast.error("You can't remove yourself as an authenticated user");
+      toast.error("You can't remove yourself");
       return;
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to remove ${userEmail} as an authenticated user?`
+      `Are you sure you want to remove ${userEmail}?`
     );
 
     if (!confirmed) return;
@@ -121,26 +109,6 @@ export default function AuthenticatedUsers() {
       console.error('Error removing user:', error);
     }
   };
-
-  if (!isAdmin && authenticatedUsers.length > 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-2xl font-bold mb-4 text-center">Access Denied</h2>
-          <p className="text-gray-600 text-center mb-6">
-            You don't have permission to access this page.
-          </p>
-          <Link
-            to="/"
-            className="flex items-center justify-center text-indigo-600 hover:text-indigo-500"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Return to Dashboard
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
