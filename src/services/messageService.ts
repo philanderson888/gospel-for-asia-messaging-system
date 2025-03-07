@@ -56,6 +56,16 @@ export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
+// Get unread messages count for a sponsor (only messages from child to sponsor)
+export const getUnreadMessagesCount = (sponsorId: string): number => {
+  const messages = initializeMessages();
+  return messages.filter(message => 
+    message.sponsor_id === sponsorId && 
+    message.message_direction === 'to_sponsor' && 
+    !message.message_has_been_read
+  ).length;
+};
+
 // Add a new message
 export const addMessage = (message: Omit<Message, 'id' | 'created_at'>): Message => {
   const messages = initializeMessages();

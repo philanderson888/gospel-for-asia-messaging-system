@@ -4,7 +4,7 @@ import { LogOut, Users, AlertCircle, UserCheck, MessageCircle } from 'lucide-rea
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import { logMessages, getMessagesBySponsorId } from '../services/messageService';
+import { logMessages, getUnreadMessagesCount } from '../services/messageService';
 
 interface AuthenticatedUser {
   id: string;
@@ -73,8 +73,7 @@ export default function Dashboard() {
 
         // If user is a sponsor, get their unread message count
         if (userData?.is_sponsor && userData?.sponsor_id) {
-          const messages = getMessagesBySponsorId(userData.sponsor_id);
-          const unreadCount = messages.filter(m => !m.message_has_been_read).length;
+          const unreadCount = getUnreadMessagesCount(userData.sponsor_id);
           setUserCounts(prev => ({ ...prev, unreadMessages: unreadCount }));
         }
 
