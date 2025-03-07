@@ -193,6 +193,18 @@ export default function Missionaries() {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    
+    if (editing.field === 'bridge_of_hope_id') {
+      // Only allow numbers and limit to 8 digits
+      const numbersOnly = value.replace(/[^\d]/g, '').slice(0, 8);
+      setEditing({ ...editing, value: numbersOnly });
+    } else {
+      setEditing({ ...editing, value });
+    }
+  };
+
   const renderEditableCell = (missionary: Missionary, field: 'bridge_of_hope_name' | 'bridge_of_hope_id') => {
     const isEditing = editing.id === missionary.id && editing.field === field;
     const value = missionary[field];
@@ -201,9 +213,12 @@ export default function Missionaries() {
       return (
         <div className="flex items-center space-x-2">
           <input
-            type="text"
+            type={field === 'bridge_of_hope_id' ? 'text' : 'text'}
             value={editing.value}
-            onChange={(e) => setEditing({ ...editing, value: e.target.value })}
+            onChange={handleInputChange}
+            maxLength={field === 'bridge_of_hope_id' ? 8 : undefined}
+            pattern={field === 'bridge_of_hope_id' ? '[0-9]*' : undefined}
+            inputMode={field === 'bridge_of_hope_id' ? 'numeric' : 'text'}
             className="block w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
             placeholder={`Enter ${field === 'bridge_of_hope_name' ? 'center name' : 'center ID'}`}
           />
