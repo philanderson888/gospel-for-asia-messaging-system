@@ -86,19 +86,6 @@ export default function MissionaryDashboard() {
           </Link>
         </div>
 
-        {/* Welcome Message */}
-        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg mb-6">
-          <div className="p-8">
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Welcome, {user?.email}!
-            </h1>
-            <p className="text-blue-100">
-              "And we know that in all things God works for the good of those who love him, 
-              who have been called according to his purpose." - Romans 8:28
-            </p>
-          </div>
-        </div>
-
         {/* Bridge of Hope Center Info */}
         <div className="bg-white shadow rounded-lg mb-6">
           <div className="p-6">
