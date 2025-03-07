@@ -21,6 +21,9 @@ interface UserCounts {
   missionaries: number;
   sponsors: number;
   pending: number;
+  pendingAdministrators: number;
+  pendingMissionaries: number;
+  pendingSponsors: number;
 }
 
 interface UserLists {
@@ -40,7 +43,10 @@ export default function Dashboard() {
     administrators: 0,
     missionaries: 0,
     sponsors: 0,
-    pending: 0
+    pending: 0,
+    pendingAdministrators: 0,
+    pendingMissionaries: 0,
+    pendingSponsors: 0
   });
 
   useEffect(() => {
@@ -85,9 +91,23 @@ export default function Dashboard() {
             pending: []
           };
 
+          // Count pending users by role
+          const pendingCounts = {
+            administrators: 0,
+            missionaries: 0,
+            sponsors: 0,
+            total: 0
+          };
+
           allUsers?.forEach(user => {
             if (user.approved === null || user.approved === false) {
               userLists.pending.push(user);
+              pendingCounts.total++;
+              
+              // Count pending by role
+              if (user.is_administrator) pendingCounts.administrators++;
+              if (user.is_missionary) pendingCounts.missionaries++;
+              if (user.is_sponsor) pendingCounts.sponsors++;
             } else {
               // User is approved, add to respective role lists
               if (user.is_administrator) userLists.administrators.push(user);
@@ -101,37 +121,33 @@ export default function Dashboard() {
             administrators: userLists.administrators.length,
             missionaries: userLists.missionaries.length,
             sponsors: userLists.sponsors.length,
-            pending: userLists.pending.length
+            pending: pendingCounts.total,
+            pendingAdministrators: pendingCounts.administrators,
+            pendingMissionaries: pendingCounts.missionaries,
+            pendingSponsors: pendingCounts.sponsors
           };
 
           setUserCounts(counts);
 
-          // Log user details (limited to 10 per category)
+          // Log user details
           console.log('\n=== User Statistics ===');
           
-          console.log('\nAdministrators:', counts.administrators);
+          console.log('\nAdministrators:', counts.administrators, '(Pending:', counts.pendingAdministrators, ')');
           userLists.administrators.slice(0, 10).forEach(admin => {
             console.log(`- ${admin.email}`);
           });
           
-          console.log('\nMissionaries:', counts.missionaries);
+          console.log('\nMissionaries:', counts.missionaries, '(Pending:', counts.pendingMissionaries, ')');
           userLists.missionaries.slice(0, 10).forEach(missionary => {
             console.log(`- ${missionary.email}`);
           });
           
-          console.log('\nSponsors:', counts.sponsors);
+          console.log('\nSponsors:', counts.sponsors, '(Pending:', counts.pendingSponsors, ')');
           userLists.sponsors.slice(0, 10).forEach(sponsor => {
             console.log(`- ${sponsor.email}`);
           });
           
-          console.log('\nPending Approval:', counts.pending);
-          userLists.pending.slice(0, 10).forEach(pending => {
-            console.log(`- ${pending.email} (${[
-              pending.is_administrator ? 'Administrator' : '',
-              pending.is_missionary ? 'Missionary' : '',
-              pending.is_sponsor ? 'Sponsor' : ''
-            ].filter(Boolean).join(', ')})`);
-          });
+          console.log('\nTotal Pending Approval:', counts.pending);
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -267,6 +283,11 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-indigo-900">
                                 {userCounts.administrators}
+                                {userCounts.pendingAdministrators > 0 && (
+                                  <span className="ml-2 text-sm font-medium text-amber-600">
+                                    +{userCounts.pendingAdministrators} pending
+                                  </span>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -289,6 +310,11 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-green-900">
                                 {userCounts.missionaries}
+                                {userCounts.pendingMissionaries > 0 && (
+                                  <span className="ml-2 text-sm font-medium text-amber-600">
+                                    +{userCounts.pendingMissionaries} pending
+                                  </span>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -311,6 +337,11 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-blue-900">
                                 {userCounts.sponsors}
+                                {userCounts.pendingSponsors > 0 && (
+                                  <span className="ml-2 text-sm font-medium text-amber-600">
+                                    +{userCounts.pendingSponsors} pending
+                                  </span>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -329,7 +360,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Pending Approval
+                                Total Pending
                               </dt>
                               <dd className="text-lg font-medium text-yellow-900">
                                 {userCounts.pending}
