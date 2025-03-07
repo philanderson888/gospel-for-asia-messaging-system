@@ -8,6 +8,7 @@ import AuthenticatedUsers from './pages/AuthenticatedUsers';
 import Administrators from './pages/Administrators';
 import Missionaries from './pages/Missionaries';
 import Sponsors from './pages/Sponsors';
+import BridgeOfHopeCenters from './pages/BridgeOfHopeCenters';
 import Pending from './pages/Pending';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -57,6 +58,14 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <Sponsors />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bridge-of-hope-centers"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <BridgeOfHopeCenters />
                 </ProtectedRoute>
               }
             />

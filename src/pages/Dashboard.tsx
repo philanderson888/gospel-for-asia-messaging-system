@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ interface AuthenticatedUser {
   is_administrator: boolean;
   is_missionary: boolean;
   is_sponsor: boolean;
+  is_bridge_of_hope: boolean;
   approved: boolean | null;
   approved_by: string | null;
   approved_date_time: string | null;
@@ -20,16 +21,19 @@ interface UserCounts {
   administrators: number;
   missionaries: number;
   sponsors: number;
+  bridgeOfHopeCenters: number;
   pending: number;
   pendingAdministrators: number;
   pendingMissionaries: number;
   pendingSponsors: number;
+  pendingBridgeOfHopeCenters: number;
 }
 
 interface UserLists {
   administrators: AuthenticatedUser[];
   missionaries: AuthenticatedUser[];
   sponsors: AuthenticatedUser[];
+  bridgeOfHopeCenters: AuthenticatedUser[];
   pending: AuthenticatedUser[];
 }
 
@@ -43,10 +47,12 @@ export default function Dashboard() {
     administrators: 0,
     missionaries: 0,
     sponsors: 0,
+    bridgeOfHopeCenters: 0,
     pending: 0,
     pendingAdministrators: 0,
     pendingMissionaries: 0,
-    pendingSponsors: 0
+    pendingSponsors: 0,
+    pendingBridgeOfHopeCenters: 0
   });
 
   useEffect(() => {
@@ -88,6 +94,7 @@ export default function Dashboard() {
             administrators: [],
             missionaries: [],
             sponsors: [],
+            bridgeOfHopeCenters: [],
             pending: []
           };
 
@@ -96,6 +103,7 @@ export default function Dashboard() {
             administrators: 0,
             missionaries: 0,
             sponsors: 0,
+            bridgeOfHopeCenters: 0,
             total: 0
           };
 
@@ -108,11 +116,13 @@ export default function Dashboard() {
               if (user.is_administrator) pendingCounts.administrators++;
               if (user.is_missionary) pendingCounts.missionaries++;
               if (user.is_sponsor) pendingCounts.sponsors++;
+              if (user.is_bridge_of_hope) pendingCounts.bridgeOfHopeCenters++;
             } else {
               // User is approved, add to respective role lists
               if (user.is_administrator) userLists.administrators.push(user);
               if (user.is_missionary) userLists.missionaries.push(user);
               if (user.is_sponsor) userLists.sponsors.push(user);
+              if (user.is_bridge_of_hope) userLists.bridgeOfHopeCenters.push(user);
             }
           });
 
@@ -121,10 +131,12 @@ export default function Dashboard() {
             administrators: userLists.administrators.length,
             missionaries: userLists.missionaries.length,
             sponsors: userLists.sponsors.length,
+            bridgeOfHopeCenters: userLists.bridgeOfHopeCenters.length,
             pending: pendingCounts.total,
             pendingAdministrators: pendingCounts.administrators,
             pendingMissionaries: pendingCounts.missionaries,
-            pendingSponsors: pendingCounts.sponsors
+            pendingSponsors: pendingCounts.sponsors,
+            pendingBridgeOfHopeCenters: pendingCounts.bridgeOfHopeCenters
           };
 
           setUserCounts(counts);
@@ -145,6 +157,11 @@ export default function Dashboard() {
           console.log('\nSponsors:', counts.sponsors, '(Pending:', counts.pendingSponsors, ')');
           userLists.sponsors.slice(0, 10).forEach(sponsor => {
             console.log(`- ${sponsor.email}`);
+          });
+
+          console.log('\nBridge of Hope Centers:', counts.bridgeOfHopeCenters, '(Pending:', counts.pendingBridgeOfHopeCenters, ')');
+          userLists.bridgeOfHopeCenters.slice(0, 10).forEach(center => {
+            console.log(`- ${center.email}`);
           });
           
           console.log('\nTotal Pending Approval:', counts.pending);
@@ -252,7 +269,9 @@ export default function Dashboard() {
                     <p className="text-sm text-green-700">
                       Your account is approved. You have access to the system as a
                       {currentUser.is_missionary && ' Missionary'}
-                      {currentUser.is_sponsor && ' Sponsor'}.
+                      {currentUser.is_sponsor && ' Sponsor'}
+                      {currentUser.is_bridge_of_hope && ' Bridge of Hope Center'}
+                      .
                     </p>
                   </div>
                 </div>
@@ -268,7 +287,7 @@ export default function Dashboard() {
               </p>
 
               {currentUser?.approved && currentUser.is_administrator && (
-                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg: grid-cols-5">
                   <Link to="/administrators" className="block">
                     <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
@@ -340,6 +359,33 @@ export default function Dashboard() {
                                 {userCounts.pendingSponsors > 0 && (
                                   <span className="ml-2 text-sm font-medium text-amber-600">
                                     +{userCounts.pendingSponsors} pending
+                                  </span>
+                                )}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/bridge-of-hope-centers" className="block">
+                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Home className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Bridge of Hope Centers
+                              </dt>
+                              <dd className="text-lg font-medium text-purple-900">
+                                {userCounts.bridgeOfHopeCenters}
+                                {userCounts.pendingBridgeOfHopeCenters > 0 && (
+                                  <span className="ml-2 text-sm font-medium text-amber-600">
+                                    +{userCounts.pendingBridgeOfHopeCenters} pending
                                   </span>
                                 )}
                               </dd>
