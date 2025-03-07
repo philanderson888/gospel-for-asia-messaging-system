@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
-import { logMessages } from '../services/messageService';
+import { logMessages, getMessagesBySponsorId } from '../services/messageService';
 
 interface AuthenticatedUser {
   id: string;
@@ -15,6 +15,7 @@ interface AuthenticatedUser {
   approved: boolean | null;
   approved_by: string | null;
   approved_date_time: string | null;
+  sponsor_id: string | null;
 }
 
 interface UserCounts {
@@ -22,6 +23,7 @@ interface UserCounts {
   missionaries: number;
   sponsors: number;
   pending: number;
+  unreadMessages: number;
 }
 
 interface UserLists {
@@ -41,7 +43,8 @@ export default function Dashboard() {
     administrators: 0,
     missionaries: 0,
     sponsors: 0,
-    pending: 0
+    pending: 0,
+    unreadMessages: 0
   });
 
   useEffect(() => {
@@ -68,6 +71,13 @@ export default function Dashboard() {
         // Log messages to console
         logMessages();
 
+        // If user is a sponsor, get their unread message count
+        if (userData?.is_sponsor && userData?.sponsor_id) {
+          const messages = getMessagesBySponsorId(userData.sponsor_id);
+          const unreadCount = messages.filter(m => !m.message_has_been_read).length;
+          setUserCounts(prev => ({ ...prev, unreadMessages: unreadCount }));
+        }
+
         // Only load other users if the current user is approved
         if (userData?.approved) {
           console.log('User is approved, fetching all users...');
@@ -93,7 +103,6 @@ export default function Dashboard() {
             if (user.approved === null || user.approved === false) {
               userLists.pending.push(user);
             } else {
-              // User is approved, add to respective role lists
               if (user.is_administrator) userLists.administrators.push(user);
               if (user.is_missionary) userLists.missionaries.push(user);
               if (user.is_sponsor) userLists.sponsors.push(user);
@@ -101,41 +110,20 @@ export default function Dashboard() {
           });
 
           // Set counts
-          const counts: UserCounts = {
+          setUserCounts(prev => ({
+            ...prev,
             administrators: userLists.administrators.length,
             missionaries: userLists.missionaries.length,
             sponsors: userLists.sponsors.length,
             pending: userLists.pending.length
-          };
+          }));
 
-          setUserCounts(counts);
-
-          // Log user details (limited to 10 per category)
+          // Log user details
           console.log('\n=== User Statistics ===');
-          
-          console.log('\nAdministrators:', counts.administrators);
-          userLists.administrators.slice(0, 10).forEach(admin => {
-            console.log(`- ${admin.email}`);
-          });
-          
-          console.log('\nMissionaries:', counts.missionaries);
-          userLists.missionaries.slice(0, 10).forEach(missionary => {
-            console.log(`- ${missionary.email}`);
-          });
-          
-          console.log('\nSponsors:', counts.sponsors);
-          userLists.sponsors.slice(0, 10).forEach(sponsor => {
-            console.log(`- ${sponsor.email}`);
-          });
-          
-          console.log('\nPending Approval:', counts.pending);
-          userLists.pending.slice(0, 10).forEach(pending => {
-            console.log(`- ${pending.email} (${[
-              pending.is_administrator ? 'Administrator' : '',
-              pending.is_missionary ? 'Missionary' : '',
-              pending.is_sponsor ? 'Sponsor' : ''
-            ].filter(Boolean).join(', ')})`);
-          });
+          console.log('Administrators:', userLists.administrators.length);
+          console.log('Missionaries:', userLists.missionaries.length);
+          console.log('Sponsors:', userLists.sponsors.length);
+          console.log('Pending:', userLists.pending.length);
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -255,88 +243,114 @@ export default function Dashboard() {
                 You are signed in as <span className="font-medium">{user?.email}</span>
               </p>
 
-              {currentUser?.approved && currentUser.is_administrator && (
-                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  <Link to="/administrators" className="block">
-                    <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
-                      <div className="p-5">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <Users className="h-6 w-6 text-indigo-600" />
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">
-                                Administrators
-                              </dt>
-                              <dd className="text-lg font-medium text-indigo-900">
-                                {userCounts.administrators}
-                              </dd>
-                            </dl>
+              <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {currentUser?.approved && currentUser.is_administrator && (
+                  <>
+                    <Link to="/administrators" className="block">
+                      <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
+                        <div className="p-5">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <Users className="h-6 w-6 text-indigo-600" />
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                              <dl>
+                                <dt className="text-sm font-medium text-gray-500 truncate">
+                                  Administrators
+                                </dt>
+                                <dd className="text-lg font-medium text-indigo-900">
+                                  {userCounts.administrators}
+                                </dd>
+                              </dl>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
 
-                  <Link to="/missionaries" className="block">
-                    <div className="bg-green-50 overflow-hidden shadow rounded-lg">
-                      <div className="p-5">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <Users className="h-6 w-6 text-green-600" />
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">
-                                Missionaries
-                              </dt>
-                              <dd className="text-lg font-medium text-green-900">
-                                {userCounts.missionaries}
-                              </dd>
-                            </dl>
+                    <Link to="/missionaries" className="block">
+                      <div className="bg-green-50 overflow-hidden shadow rounded-lg">
+                        <div className="p-5">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <Users className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                              <dl>
+                                <dt className="text-sm font-medium text-gray-500 truncate">
+                                  Missionaries
+                                </dt>
+                                <dd className="text-lg font-medium text-green-900">
+                                  {userCounts.missionaries}
+                                </dd>
+                              </dl>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
 
-                  <Link to="/sponsors" className="block">
-                    <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
-                      <div className="p-5">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <Users className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">
-                                Sponsors
-                              </dt>
-                              <dd className="text-lg font-medium text-blue-900">
-                                {userCounts.sponsors}
-                              </dd>
-                            </dl>
+                    <Link to="/sponsors" className="block">
+                      <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
+                        <div className="p-5">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <Users className="h-6 w-6 text-blue-600" />
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                              <dl>
+                                <dt className="text-sm font-medium text-gray-500 truncate">
+                                  Sponsors
+                                </dt>
+                                <dd className="text-lg font-medium text-blue-900">
+                                  {userCounts.sponsors}
+                                </dd>
+                              </dl>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
 
-                  <Link to="/pending" className="block">
-                    <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
+                    <Link to="/pending" className="block">
+                      <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
+                        <div className="p-5">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0">
+                              <AlertCircle className="h-6 w-6 text-yellow-600" />
+                            </div>
+                            <div className="ml-5 w-0 flex-1">
+                              <dl>
+                                <dt className="text-sm font-medium text-gray-500 truncate">
+                                  Pending Approval
+                                </dt>
+                                <dd className="text-lg font-medium text-yellow-900">
+                                  {userCounts.pending}
+                                </dd>
+                              </dl>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </>
+                )}
+
+                {currentUser?.approved && currentUser.is_sponsor && (
+                  <Link to="/messages" className="block">
+                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
-                            <AlertCircle className="h-6 w-6 text-yellow-600" />
+                            <MessageCircle className="h-6 w-6 text-purple-600" />
                           </div>
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Pending Approval
+                                Unread Messages
                               </dt>
-                              <dd className="text-lg font-medium text-yellow-900">
-                                {userCounts.pending}
+                              <dd className="text-lg font-medium text-purple-900">
+                                {userCounts.unreadMessages}
                               </dd>
                             </dl>
                           </div>
@@ -344,8 +358,8 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </Link>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
