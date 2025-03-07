@@ -36,6 +36,84 @@ To ensure system security and data integrity, sponsors must complete a verificat
 3. This two-factor verification helps prevent unauthorized access
 4. Only verified sponsors can access the communication platform
 
+## 📖 User Guide
+
+### For Administrators
+
+Administrators have full access to manage users and oversee the system. Here's what you can do:
+
+1. **Dashboard Overview**
+   - View real-time statistics for all user types
+   - Monitor pending approvals
+   - Access management sections for each user type
+
+2. **User Management**
+   - Approve or reject new user registrations
+   - View and manage administrators
+   - View and manage missionaries
+   - View and manage sponsors
+   - View and manage Bridge of Hope centers
+   - Remove users when necessary
+
+3. **Bridge of Hope Center Management**
+   - Review and approve Bridge of Hope center registrations
+   - Edit center details (name and ID)
+   - Monitor center associations with missionaries
+
+4. **Security Features**
+   - Approve new administrator requests
+   - Monitor user activities
+   - Ensure data integrity
+
+### For Missionaries
+
+Missionaries serve at Bridge of Hope centers, providing education and spiritual guidance. Here's how to use the system:
+
+1. **Registration**
+   - Sign up as a missionary
+   - Optionally provide your Bridge of Hope center details
+   - Wait for administrator approval
+
+2. **Profile Management**
+   - Update your Bridge of Hope center association
+   - Manage your center name and ID
+   - View your approval status
+
+3. **Center Association**
+   - Link your account to a Bridge of Hope center
+   - Update center details when needed
+   - Maintain connection with your assigned center
+
+### For Bridge of Hope Centers
+
+Bridge of Hope centers are the physical locations where children receive education and care:
+
+1. **Registration**
+   - Register with your center's email address
+   - Provide your official Bridge of Hope Center ID (required)
+   - Add your center's name
+   - Wait for administrator approval
+
+2. **Center Management**
+   - Update your center's name and ID when needed
+   - Maintain accurate center information
+   - Connect with assigned missionaries
+
+### For Sponsors
+
+Sponsors support children through the Bridge of Hope program:
+
+1. **Registration Requirements**
+   - Valid email address
+   - Sponsor ID (from welcome letter)
+   - Child ID (from welcome letter)
+   - Both IDs are required for registration
+
+2. **Account Management**
+   - View your sponsorship details
+   - Maintain your connection to your sponsored child
+   - Update your profile information
+
 ## 🚀 Features
 
 ### Authentication & Authorization
@@ -45,10 +123,11 @@ To ensure system security and data integrity, sponsors must complete a verificat
 - ✅ Forced login for authenticated routes
 
 ### User Management
-- ✅ Three distinct user roles:
+- ✅ Four distinct user roles:
   - Administrators
   - Missionaries
   - Sponsors
+  - Bridge of Hope Centers
 - ✅ Approval workflow for new users
 - ✅ Role-specific dashboards and permissions
 
@@ -67,12 +146,17 @@ To ensure system security and data integrity, sponsors must complete a verificat
   - Access to user management
   - Real-time user statistics
   - Ability to manage other users
+- ✅ Bridge of Hope Centers:
+  - Center-specific dashboard
+  - Connection with missionaries
+  - Role-specific features (coming soon)
 
 ### Dashboard Features
 - ✅ Real-time user statistics for administrators:
   - Count of administrators
   - Count of missionaries
   - Count of sponsors
+  - Count of Bridge of Hope centers
   - Count of pending approvals
 - ✅ Role-specific welcome messages
 - ✅ Clean, intuitive interface
@@ -96,15 +180,17 @@ To ensure system security and data integrity, sponsors must complete a verificat
 - Database row-level security (RLS)
 - Secure password handling
 - Two-factor verification for sponsors (Sponsor ID + Child ID)
+- Bridge of Hope Center ID verification
 
 ## 🌱 Project Status
 
-The project is under active development. Core authentication and authorization features are complete, with role-specific features coming soon.
+The project is under active development. Core authentication, authorization, and user management features are complete, with role-specific features coming soon.
 
 ### Coming Soon
-- Missionary-specific features
-- Sponsor-specific features
-- Enhanced administrator tools
+- Messaging system between sponsors and Bridge of Hope centers
+- Enhanced missionary features
+- Expanded sponsor capabilities
+- Advanced administrator tools
 - Reporting and analytics
 - Communication features
 
