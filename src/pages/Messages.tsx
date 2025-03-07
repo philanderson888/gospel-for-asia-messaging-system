@@ -114,7 +114,7 @@ export default function Messages() {
             <h2 className="text-lg font-medium mb-6">Messages</h2>
 
             {/* New Message Form */}
-            <div className="mb-12 relative pb-12 border-b border-gray-200">
+            <div className="mb-8">
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                 New Message
               </label>
@@ -122,33 +122,33 @@ export default function Messages() {
                 <textarea
                   id="message"
                   rows={4}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm mb-10"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none"
                   placeholder="Type your message here (minimum 200 characters)"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
-                <div className="absolute bottom-0 right-0 flex items-center space-x-4 bg-white px-3 py-2">
+                <div className="mt-4 flex items-center justify-between">
                   <span className={`text-sm ${newMessage.length < 200 ? 'text-red-500' : 'text-green-500'}`}>
-                    {newMessage.length}/200
+                    {newMessage.length}/200 characters
                   </span>
                   <button
                     onClick={handleSendMessage}
                     disabled={newMessage.length < 200}
-                    className={`inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
+                    className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${
                       newMessage.length < 200
                         ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-indigo-600 hover:bg-indigo-700'
+                        : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
                     }`}
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Send
+                    Send Message
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Message List */}
-            <div className="space-y-6">
+            <div className="space-y-6 border-t pt-6">
               {messages.map((message) => (
                 <div
                   key={message.id}
