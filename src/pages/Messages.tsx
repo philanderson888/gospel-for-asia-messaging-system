@@ -119,12 +119,16 @@ export default function Messages() {
 
           <div className="bg-white shadow rounded-lg overflow-hidden">
             <div className="p-6">
-              <h2 className="text-lg font-medium mb-6">Messages</h2>
+              <h2 className="text-lg font-medium mb-2">Messages with Your Sponsored Child</h2>
+              <p className="text-gray-600 mb-6">
+                Your messages of encouragement and support make a real difference in your sponsored child's life.
+                Share your thoughts, prayers, and words of encouragement below.
+              </p>
 
               {/* New Message Form */}
               <div className="mb-8">
                 <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                  New Message
+                  Write a New Message
                 </label>
                 <div className="relative">
                   <textarea
@@ -132,7 +136,7 @@ export default function Messages() {
                     rows={4}
                     maxLength={200}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none"
-                    placeholder="Type your message here (maximum 200 characters)"
+                    placeholder="Share your thoughts and prayers with your sponsored child..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                   />
@@ -173,7 +177,7 @@ export default function Messages() {
                       }`}
                     >
                       <div className="text-sm mb-1">
-                        {message.message_direction === 'to_child' ? 'You' : 'Child'}
+                        {message.message_direction === 'to_child' ? 'You' : 'Your Sponsored Child'}
                       </div>
                       <div className="text-sm">{message.message_text}</div>
                       <div className="text-xs text-gray-500 mt-2">
@@ -185,7 +189,8 @@ export default function Messages() {
 
                 {messages.length === 0 && (
                   <div className="text-center text-gray-500">
-                    No messages yet. Start the conversation by sending a message.
+                    <p className="mb-2">No messages yet.</p>
+                    <p>Start the conversation by sending an encouraging message to your sponsored child!</p>
                   </div>
                 )}
               </div>
