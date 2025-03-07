@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Users, School, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getCenterByMissionary } from '../services/bridgeOfHopeCenterService';
 import { getChildrenByCenter } from '../services/childService';
+import { logRecentMessagesForCenter } from '../services/bridgeOfHopeMessageService';
 import { Child } from '../types/child';
 import { BridgeOfHopeCenter } from '../types/bridgeOfHopeCenter';
 
@@ -21,6 +22,7 @@ export default function MissionaryDashboard() {
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
   const [center, setCenter] = useState<BridgeOfHopeCenter | null>(null);
   const [children, setChildren] = useState<Child[]>([]);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     const loadMissionaryData = async () => {
@@ -46,6 +48,12 @@ export default function MissionaryDashboard() {
             // Get children at this center
             const centerChildren = getChildrenByCenter(centerData.center_id);
             setChildren(centerChildren);
+
+            // Log recent messages for this center
+            if (isFirstRender.current) {
+              logRecentMessagesForCenter(centerData.center_id);
+              isFirstRender.current = false;
+            }
           }
         }
       } catch (error) {
@@ -127,7 +135,7 @@ export default function MissionaryDashboard() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Sponsor Status
                       </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -153,14 +161,16 @@ export default function MissionaryDashboard() {
                             {child.sponsor_id ? 'Sponsored' : 'Needs Sponsor'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <button
-                            onClick={() => {/* View messages implementation */}}
-                            className="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
-                          >
-                            <MessageCircle className="h-4 w-4 mr-1" />
-                            View Messages
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {child.sponsor_id && (
+                            <Link
+                              to={`/messages/${child.sponsor_id}`}
+                              className="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
+                            >
+                              <MessageCircle className="h-4 w-4 mr-1" />
+                              View Messages
+                            </Link>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -168,7 +178,9 @@ export default function MissionaryDashboard() {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500">No children registered at this center.</p>
+              <div className="text-center text-gray-500 py-4">
+                <p>No children registered at this center yet.</p>
+              </div>
             )}
           </div>
         </div>
