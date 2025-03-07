@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck, MessageCircle } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, MessageCircle, School } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { logMessages, getUnreadMessagesCount } from '../services/messageService';
+import { logCenters, getCenterByMissionary } from '../services/bridgeOfHopeCenterService';
+import { logChildren } from '../services/childService';
+import { BridgeOfHopeCenter } from '../types/bridgeOfHopeCenter';
 
 interface AuthenticatedUser {
   id: string;
@@ -12,10 +15,13 @@ interface AuthenticatedUser {
   is_administrator: boolean;
   is_missionary: boolean;
   is_sponsor: boolean;
+  is_bridge_of_hope: boolean;
   approved: boolean | null;
   approved_by: string | null;
   approved_date_time: string | null;
   sponsor_id: string | null;
+  bridge_of_hope_id: string | null;
+  bridge_of_hope_name: string | null;
 }
 
 interface UserCounts {
@@ -24,6 +30,8 @@ interface UserCounts {
   sponsors: number;
   pending: number;
   unreadMessages: number;
+  bridgeOfHopeCenters: number;
+  children: number;
 }
 
 interface UserLists {
@@ -38,13 +46,16 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const isFirstRender = useRef(true);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
+  const [center, setCenter] = useState<BridgeOfHopeCenter | null>(null);
   const [loading, setLoading] = useState(true);
   const [userCounts, setUserCounts] = useState<UserCounts>({
     administrators: 0,
     missionaries: 0,
     sponsors: 0,
     pending: 0,
-    unreadMessages: 0
+    unreadMessages: 0,
+    bridgeOfHopeCenters: 1,
+    children: 1
   });
 
   useEffect(() => {
@@ -68,8 +79,10 @@ export default function Dashboard() {
         setCurrentUser(userData);
         console.log('Current user status:', userData);
 
-        // Log messages to console
+        // Log all local storage data
         logMessages();
+        logCenters();
+        logChildren();
 
         // If user is a sponsor, get their unread message count
         if (userData?.is_sponsor && userData?.sponsor_id) {
@@ -77,9 +90,17 @@ export default function Dashboard() {
           setUserCounts(prev => ({ ...prev, unreadMessages: unreadCount }));
         }
 
-        // Only load other users if the current user is approved
+        // If user is a missionary, get their center details
+        if (userData?.is_missionary && userData?.bridge_of_hope_id) {
+          const centerData = getCenterByMissionary(userData.bridge_of_hope_id);
+          setCenter(centerData);
+        }
+
+        // Only load other data if the current user is approved
         if (userData?.approved) {
-          console.log('User is approved, fetching all users...');
+          console.log('User is approved, fetching all data...');
+
+          // Fetch users
           const { data: allUsers, error } = await supabase
             .from('authenticated_users')
             .select('*')
@@ -123,6 +144,8 @@ export default function Dashboard() {
           console.log('Missionaries:', userLists.missionaries.length);
           console.log('Sponsors:', userLists.sponsors.length);
           console.log('Pending:', userLists.pending.length);
+          console.log('Bridge of Hope Centers:', 1);
+          console.log('Children:', 1);
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -217,139 +240,111 @@ export default function Dashboard() {
               </div>
             </div>
           ) : (
-            currentUser && !currentUser.is_administrator && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <UserCheck className="h-5 w-5 text-green-400" />
+            <>
+              {/* Missionary Dashboard Content */}
+              {currentUser.is_missionary && (
+                <>
+                  {/* Welcome Message */}
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg mb-6">
+                    <div className="p-8">
+                      <h1 className="text-2xl font-bold text-white mb-2">
+                        Welcome, {user?.email}!
+                      </h1>
+                      <p className="text-blue-100">
+                        "And we know that in all things God works for the good of those who love him, 
+                        who have been called according to his purpose." - Romans 8:28
+                      </p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-green-700">
-                      Your account is approved. You have access to the system as a
-                      {currentUser.is_missionary && ' Missionary'}
-                      {currentUser.is_sponsor && ' Sponsor'}.
-                    </p>
+
+                  {/* Bridge of Hope Center Info */}
+                  <div className="bg-white shadow rounded-lg mb-6">
+                    <div className="p-6">
+                      <div className="flex items-center mb-4">
+                        <School className="h-6 w-6 text-indigo-600 mr-2" />
+                        <h2 className="text-lg font-medium text-gray-900">Your Bridge of Hope Center</h2>
+                      </div>
+                      {center ? (
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Center Name</p>
+                            <p className="mt-1 text-lg text-gray-900">{center.name}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">Center ID</p>
+                            <p className="mt-1 text-lg text-gray-900">{center.center_id}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-gray-500">No Bridge of Hope center assigned yet.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            )
-          )}
-          
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium mb-4">Welcome!</h2>
-            <div className="space-y-4">
-              <p className="text-gray-600">
-                You are signed in as <span className="font-medium">{user?.email}</span>
-              </p>
 
-              <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {currentUser?.approved && currentUser.is_administrator && (
-                  <>
-                    <Link to="/administrators" className="block">
-                      <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <Users className="h-6 w-6 text-indigo-600" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                              <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">
-                                  Administrators
-                                </dt>
-                                <dd className="text-lg font-medium text-indigo-900">
-                                  {userCounts.administrators}
-                                </dd>
-                              </dl>
-                            </div>
-                          </div>
+                  {/* Quick Action Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Children Card */}
+                    <div className="bg-white shadow rounded-lg overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex items-center mb-4">
+                          <Users className="h-6 w-6 text-green-600 mr-2" />
+                          <h3 className="text-lg font-medium text-gray-900">Children</h3>
+                        </div>
+                        <p className="text-gray-600 mb-4">
+                          View and manage children at your Bridge of Hope center
+                        </p>
+                        <div className="mt-4">
+                          <Link
+                            to="/missionary-dashboard"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                          >
+                            View Children
+                          </Link>
                         </div>
                       </div>
-                    </Link>
+                    </div>
 
-                    <Link to="/missionaries" className="block">
-                      <div className="bg-green-50 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <Users className="h-6 w-6 text-green-600" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                              <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">
-                                  Missionaries
-                                </dt>
-                                <dd className="text-lg font-medium text-green-900">
-                                  {userCounts.missionaries}
-                                </dd>
-                              </dl>
-                            </div>
-                          </div>
+                    {/* Messages Card */}
+                    <div className="bg-white shadow rounded-lg overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex items-center mb-4">
+                          <MessageCircle className="h-6 w-6 text-purple-600 mr-2" />
+                          <h3 className="text-lg font-medium text-gray-900">Messages</h3>
+                        </div>
+                        <p className="text-gray-600 mb-4">
+                          Manage messages between sponsors and children (Coming Soon)
+                        </p>
+                        <div className="mt-4">
+                          <button
+                            disabled
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
+                          >
+                            Coming Soon
+                          </button>
                         </div>
                       </div>
-                    </Link>
+                    </div>
+                  </div>
+                </>
+              )}
 
-                    <Link to="/sponsors" className="block">
-                      <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <Users className="h-6 w-6 text-blue-600" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                              <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">
-                                  Sponsors
-                                </dt>
-                                <dd className="text-lg font-medium text-blue-900">
-                                  {userCounts.sponsors}
-                                </dd>
-                              </dl>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-
-                    <Link to="/pending" className="block">
-                      <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
-                        <div className="p-5">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <AlertCircle className="h-6 w-6 text-yellow-600" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                              <dl>
-                                <dt className="text-sm font-medium text-gray-500 truncate">
-                                  Pending Approval
-                                </dt>
-                                <dd className="text-lg font-medium text-yellow-900">
-                                  {userCounts.pending}
-                                </dd>
-                              </dl>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </>
-                )}
-
-                {currentUser?.approved && currentUser.is_sponsor && (
-                  <Link to="/messages" className="block">
-                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+              {/* Administrator Stats */}
+              {currentUser.is_administrator && (
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                  <Link to="/administrators" className="block">
+                    <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
                         <div className="flex items-center">
                           <div className="flex-shrink-0">
-                            <MessageCircle className="h-6 w-6 text-purple-600" />
+                            <Users className="h-6 w-6 text-indigo-600" />
                           </div>
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Unread Messages
+                                Administrators
                               </dt>
-                              <dd className="text-lg font-medium text-purple-900">
-                                {userCounts.unreadMessages}
+                              <dd className="text-lg font-medium text-indigo-900">
+                                {userCounts.administrators}
                               </dd>
                             </dl>
                           </div>
@@ -357,10 +352,101 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </Link>
-                )}
-              </div>
-            </div>
-          </div>
+
+                  <Link to="/missionaries" className="block">
+                    <div className="bg-green-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Users className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Missionaries
+                              </dt>
+                              <dd className="text-lg font-medium text-green-900">
+                                {userCounts.missionaries}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/sponsors" className="block">
+                    <div className="bg-blue-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <Users className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Sponsors
+                              </dt>
+                              <dd className="text-lg font-medium text-blue-900">
+                                {userCounts.sponsors}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/pending" className="block">
+                    <div className="bg-yellow-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <AlertCircle className="h-6 w-6 text-yellow-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Pending Approval
+                              </dt>
+                              <dd className="text-lg font-medium text-yellow-900">
+                                {userCounts.pending}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              )}
+
+              {/* Sponsor Messages */}
+              {currentUser.is_sponsor && (
+                <Link to="/messages" className="block">
+                  <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <MessageCircle className="h-6 w-6 text-purple-600" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 truncate">
+                              Unread Messages
+                            </dt>
+                            <dd className="text-lg font-medium text-purple-900">
+                              {userCounts.unreadMessages}
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              )}
+            </>
+          )}
         </div>
       </main>
     </div>

@@ -10,6 +10,7 @@ import Missionaries from './pages/Missionaries';
 import Sponsors from './pages/Sponsors';
 import Messages from './pages/Messages';
 import Pending from './pages/Pending';
+import MissionaryDashboard from './pages/MissionaryDashboard';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -74,6 +75,14 @@ function App() {
               element={
                 <ProtectedRoute requireAdmin={true}>
                   <Pending />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/missionary-dashboard"
+              element={
+                <ProtectedRoute>
+                  <MissionaryDashboard />
                 </ProtectedRoute>
               }
             />
