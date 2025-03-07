@@ -1,6 +1,6 @@
 import { Message } from '../types/message';
 
-const STORAGE_KEY = 'messages';
+const STORAGE_KEY = 'sponsor_messages';
 
 // Initialize with sample messages if storage is empty
 const initializeMessages = () => {
@@ -20,7 +20,7 @@ const initializeMessages = () => {
         id: '1',
         sponsor_id: '12345678',
         created_at: threeDaysAgo.toISOString(),
-        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor.',
+        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor. I would love to hear about your studies and what you enjoy doing at the Bridge of Hope center.',
         message_has_been_read: true,
         message_direction: 'to_child'
       },
@@ -28,7 +28,7 @@ const initializeMessages = () => {
         id: '2',
         sponsor_id: '12345678',
         created_at: twoDaysAgo.toISOString(),
-        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics.',
+        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. At the Bridge of Hope center, I love playing cricket with my friends during break time. Thank you for your prayers.',
         message_has_been_read: true,
         message_direction: 'to_sponsor'
       },
@@ -36,7 +36,7 @@ const initializeMessages = () => {
         id: '3',
         sponsor_id: '12345678',
         created_at: yesterday.toISOString(),
-        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too.',
+        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too. I will continue to pray for your studies and that God will bless you with wisdom and understanding. Keep working hard!',
         message_has_been_read: false,
         message_direction: 'to_child'
       }
@@ -54,18 +54,6 @@ export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
   const messages = initializeMessages();
   return messages.filter(message => message.sponsor_id === sponsorId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-};
-
-// Get messages for a Bridge of Hope center within the last 60 days
-export const getRecentMessagesByCenter = (bridgeOfHopeId: string): Message[] => {
-  const messages = initializeMessages();
-  const sixtyDaysAgo = new Date();
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-  return messages.filter(message => {
-    const messageDate = new Date(message.created_at);
-    return messageDate >= sixtyDaysAgo;
-  });
 };
 
 // Get unread messages count for a sponsor
@@ -106,7 +94,7 @@ export const markMessageAsRead = (messageId: string): void => {
 // Log all messages to console
 export const logMessages = () => {
   const messages = initializeMessages();
-  console.log('\n=== Messages in Local Storage ===');
+  console.log('\n=== Sponsor Messages in Local Storage ===');
   messages.forEach(message => {
     console.log(`\nMessage ID: ${message.id}`);
     console.log(`From: ${message.message_direction === 'to_child' ? 'Sponsor' : 'Child'}`);
@@ -115,25 +103,5 @@ export const logMessages = () => {
     console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
     console.log(`Text: ${message.message_text}`);
   });
-  console.log('\n');
-};
-
-// Log recent messages for a Bridge of Hope center
-export const logRecentMessagesForCenter = (bridgeOfHopeId: string) => {
-  const messages = getRecentMessagesByCenter(bridgeOfHopeId);
-  console.log(`\n=== Recent Messages (Last 60 Days) for Bridge of Hope Center ${bridgeOfHopeId} ===`);
-  
-  if (messages.length === 0) {
-    console.log('No messages found in the last 60 days');
-  } else {
-    messages.forEach(message => {
-      console.log(`\nMessage ID: ${message.id}`);
-      console.log(`Direction: ${message.message_direction}`);
-      console.log(`Sponsor ID: ${message.sponsor_id}`);
-      console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
-      console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
-      console.log(`Text: ${message.message_text}`);
-    });
-  }
   console.log('\n');
 };

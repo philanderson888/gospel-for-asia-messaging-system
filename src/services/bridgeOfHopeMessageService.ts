@@ -1,6 +1,6 @@
 import { Message } from '../types/message';
 
-const STORAGE_KEY = 'messages';
+const STORAGE_KEY = 'bridge_of_hope_messages';
 
 // Initialize with sample messages if storage is empty
 const initializeMessages = () => {
@@ -18,27 +18,19 @@ const initializeMessages = () => {
     const sampleMessages: Message[] = [
       {
         id: '1',
-        sponsor_id: '12345678',
+        sponsor_id: '87654321',
         created_at: threeDaysAgo.toISOString(),
-        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor.',
+        message_text: 'Dear child, I am praying for your studies and your family. May God bless you with wisdom and understanding.',
         message_has_been_read: true,
         message_direction: 'to_child'
       },
       {
         id: '2',
-        sponsor_id: '12345678',
+        sponsor_id: '87654321',
         created_at: twoDaysAgo.toISOString(),
-        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics.',
+        message_text: 'Thank you for your prayers! I am working hard in my studies and learning new things every day.',
         message_has_been_read: true,
         message_direction: 'to_sponsor'
-      },
-      {
-        id: '3',
-        sponsor_id: '12345678',
-        created_at: yesterday.toISOString(),
-        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too.',
-        message_has_been_read: false,
-        message_direction: 'to_child'
       }
     ];
 
@@ -47,13 +39,6 @@ const initializeMessages = () => {
   }
 
   return JSON.parse(existingMessages);
-};
-
-// Get all messages for a sponsor
-export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
-  const messages = initializeMessages();
-  return messages.filter(message => message.sponsor_id === sponsorId)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
 // Get messages for a Bridge of Hope center within the last 60 days
@@ -66,16 +51,6 @@ export const getRecentMessagesByCenter = (bridgeOfHopeId: string): Message[] => 
     const messageDate = new Date(message.created_at);
     return messageDate >= sixtyDaysAgo;
   });
-};
-
-// Get unread messages count for a sponsor
-export const getUnreadMessagesCount = (sponsorId: string): number => {
-  const messages = initializeMessages();
-  return messages.filter(message => 
-    message.sponsor_id === sponsorId && 
-    message.message_direction === 'to_sponsor' && 
-    !message.message_has_been_read
-  ).length;
 };
 
 // Add a new message
@@ -101,21 +76,6 @@ export const markMessageAsRead = (messageId: string): void => {
       : message
   );
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMessages));
-};
-
-// Log all messages to console
-export const logMessages = () => {
-  const messages = initializeMessages();
-  console.log('\n=== Messages in Local Storage ===');
-  messages.forEach(message => {
-    console.log(`\nMessage ID: ${message.id}`);
-    console.log(`From: ${message.message_direction === 'to_child' ? 'Sponsor' : 'Child'}`);
-    console.log(`Sponsor ID: ${message.sponsor_id}`);
-    console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
-    console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
-    console.log(`Text: ${message.message_text}`);
-  });
-  console.log('\n');
 };
 
 // Log recent messages for a Bridge of Hope center
