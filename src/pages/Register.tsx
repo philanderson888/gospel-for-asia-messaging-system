@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { UserPlus } from 'lucide-react';
 
-type UserRole = 'administrator' | 'missionary' | 'sponsor';
+type UserRole = 'administrator' | 'missionary' | 'sponsor' | 'bridge_of_hope';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -61,7 +61,7 @@ export default function Register() {
   };
 
   const validateBridgeOfHopeId = () => {
-    if (selectedRole !== 'missionary' || !bridgeOfHopeId) return true;
+    if ((selectedRole !== 'missionary' && selectedRole !== 'bridge_of_hope') || !bridgeOfHopeId) return true;
 
     if (!/^\d+$/.test(bridgeOfHopeId)) {
       toast.error('Bridge of Hope ID must contain only numbers');
@@ -115,13 +115,14 @@ export default function Register() {
             is_administrator: selectedRole === 'administrator',
             is_missionary: selectedRole === 'missionary',
             is_sponsor: selectedRole === 'sponsor',
+            is_bridge_of_hope: selectedRole === 'bridge_of_hope',
             approved: null, // Needs admin approval
             approved_by: null,
             approved_date_time: null,
             sponsor_id: selectedRole === 'sponsor' ? sponsorId : null,
             child_id: selectedRole === 'sponsor' ? childId : null,
-            bridge_of_hope_name: selectedRole === 'missionary' ? bridgeOfHopeName : null,
-            bridge_of_hope_id: selectedRole === 'missionary' ? bridgeOfHopeId : null
+            bridge_of_hope_name: (selectedRole === 'missionary' || selectedRole === 'bridge_of_hope') ? bridgeOfHopeName : null,
+            bridge_of_hope_id: (selectedRole === 'missionary' || selectedRole === 'bridge_of_hope') ? bridgeOfHopeId : null
           }
         ]);
 
@@ -240,7 +241,64 @@ export default function Register() {
                 Register as Sponsor
               </label>
             </div>
+            <div className="flex items-center">
+              <input
+                id="bridge_of_hope"
+                name="role"
+                type="radio"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                checked={selectedRole === 'bridge_of_hope'}
+                onChange={() => setSelectedRole('bridge_of_hope')}
+              />
+              <label htmlFor="bridge_of_hope" className="ml-2 block text-sm text-gray-900">
+                Register as Bridge of Hope Center
+              </label>
+            </div>
           </div>
+
+          {/* Bridge of Hope Center fields */}
+          {selectedRole === 'bridge_of_hope' && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <label htmlFor="bridge-of-hope-name" className="block text-sm font-medium text-gray-700">
+                  Bridge of Hope Center Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="bridge-of-hope-name"
+                    id="bridge-of-hope-name"
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter Bridge of Hope Center Name (optional)"
+                    value={bridgeOfHopeName}
+                    onChange={(e) => setBridgeOfHopeName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="bridge-of-hope-id" className="block text-sm font-medium text-gray-700">
+                  Bridge of Hope Center ID
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="bridge-of-hope-id"
+                    id="bridge-of-hope-id"
+                    pattern="[0-9]{1,8}"
+                    maxLength={8}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter Bridge of Hope Center ID (optional)"
+                    value={bridgeOfHopeId}
+                    onChange={(e) => setBridgeOfHopeId(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Optional: Enter your Bridge of Hope Center ID (up to 8 digits)
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Missionary-specific fields */}
           {selectedRole === 'missionary' && (
