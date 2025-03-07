@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck, Home, Heart, Gift, HelpingHand } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import { logMessages } from '../services/messageService';
 
 interface AuthenticatedUser {
   id: string;
@@ -11,33 +12,22 @@ interface AuthenticatedUser {
   is_administrator: boolean;
   is_missionary: boolean;
   is_sponsor: boolean;
-  is_bridge_of_hope: boolean;
   approved: boolean | null;
   approved_by: string | null;
   approved_date_time: string | null;
-  sponsor_id: string | null;
-  child_id: string | null;
-  bridge_of_hope_name: string | null;
-  bridge_of_hope_id: string | null;
 }
 
 interface UserCounts {
   administrators: number;
   missionaries: number;
   sponsors: number;
-  bridgeOfHopeCenters: number;
   pending: number;
-  pendingAdministrators: number;
-  pendingMissionaries: number;
-  pendingSponsors: number;
-  pendingBridgeOfHopeCenters: number;
 }
 
 interface UserLists {
   administrators: AuthenticatedUser[];
   missionaries: AuthenticatedUser[];
   sponsors: AuthenticatedUser[];
-  bridgeOfHopeCenters: AuthenticatedUser[];
   pending: AuthenticatedUser[];
 }
 
@@ -51,12 +41,7 @@ export default function Dashboard() {
     administrators: 0,
     missionaries: 0,
     sponsors: 0,
-    bridgeOfHopeCenters: 0,
-    pending: 0,
-    pendingAdministrators: 0,
-    pendingMissionaries: 0,
-    pendingSponsors: 0,
-    pendingBridgeOfHopeCenters: 0
+    pending: 0
   });
 
   useEffect(() => {
@@ -80,6 +65,9 @@ export default function Dashboard() {
         setCurrentUser(userData);
         console.log('Current user status:', userData);
 
+        // Log messages to console
+        logMessages();
+
         // Only load other users if the current user is approved
         if (userData?.approved) {
           console.log('User is approved, fetching all users...');
@@ -98,35 +86,17 @@ export default function Dashboard() {
             administrators: [],
             missionaries: [],
             sponsors: [],
-            bridgeOfHopeCenters: [],
             pending: []
-          };
-
-          // Count pending users by role
-          const pendingCounts = {
-            administrators: 0,
-            missionaries: 0,
-            sponsors: 0,
-            bridgeOfHopeCenters: 0,
-            total: 0
           };
 
           allUsers?.forEach(user => {
             if (user.approved === null || user.approved === false) {
               userLists.pending.push(user);
-              pendingCounts.total++;
-              
-              // Count pending by role
-              if (user.is_administrator) pendingCounts.administrators++;
-              if (user.is_missionary) pendingCounts.missionaries++;
-              if (user.is_sponsor) pendingCounts.sponsors++;
-              if (user.is_bridge_of_hope) pendingCounts.bridgeOfHopeCenters++;
             } else {
               // User is approved, add to respective role lists
               if (user.is_administrator) userLists.administrators.push(user);
               if (user.is_missionary) userLists.missionaries.push(user);
               if (user.is_sponsor) userLists.sponsors.push(user);
-              if (user.is_bridge_of_hope) userLists.bridgeOfHopeCenters.push(user);
             }
           });
 
@@ -135,40 +105,37 @@ export default function Dashboard() {
             administrators: userLists.administrators.length,
             missionaries: userLists.missionaries.length,
             sponsors: userLists.sponsors.length,
-            bridgeOfHopeCenters: userLists.bridgeOfHopeCenters.length,
-            pending: pendingCounts.total,
-            pendingAdministrators: pendingCounts.administrators,
-            pendingMissionaries: pendingCounts.missionaries,
-            pendingSponsors: pendingCounts.sponsors,
-            pendingBridgeOfHopeCenters: pendingCounts.bridgeOfHopeCenters
+            pending: userLists.pending.length
           };
 
           setUserCounts(counts);
 
-          // Log user details
+          // Log user details (limited to 10 per category)
           console.log('\n=== User Statistics ===');
           
-          console.log('\nAdministrators:', counts.administrators, '(Pending:', counts.pendingAdministrators, ')');
+          console.log('\nAdministrators:', counts.administrators);
           userLists.administrators.slice(0, 10).forEach(admin => {
             console.log(`- ${admin.email}`);
           });
           
-          console.log('\nMissionaries:', counts.missionaries, '(Pending:', counts.pendingMissionaries, ')');
+          console.log('\nMissionaries:', counts.missionaries);
           userLists.missionaries.slice(0, 10).forEach(missionary => {
             console.log(`- ${missionary.email}`);
           });
           
-          console.log('\nSponsors:', counts.sponsors, '(Pending:', counts.pendingSponsors, ')');
+          console.log('\nSponsors:', counts.sponsors);
           userLists.sponsors.slice(0, 10).forEach(sponsor => {
             console.log(`- ${sponsor.email}`);
           });
-
-          console.log('\nBridge of Hope Centers:', counts.bridgeOfHopeCenters, '(Pending:', counts.pendingBridgeOfHopeCenters, ')');
-          userLists.bridgeOfHopeCenters.slice(0, 10).forEach(center => {
-            console.log(`- ${center.email}`);
-          });
           
-          console.log('\nTotal Pending Approval:', counts.pending);
+          console.log('\nPending Approval:', counts.pending);
+          userLists.pending.slice(0, 10).forEach(pending => {
+            console.log(`- ${pending.email} (${[
+              pending.is_administrator ? 'Administrator' : '',
+              pending.is_missionary ? 'Missionary' : '',
+              pending.is_sponsor ? 'Sponsor' : ''
+            ].filter(Boolean).join(', ')})`);
+          });
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -202,88 +169,6 @@ export default function Dashboard() {
       toast.error(error.message);
     }
   };
-
-  const renderMissionaryWelcome = (missionary: AuthenticatedUser) => (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <HelpingHand className="h-8 w-8 text-indigo-600" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, Dear Missionary</h2>
-          <div className="prose max-w-none text-gray-600">
-            <p className="mb-4">
-              Thank you for your dedication to serving at our Bridge of Hope center. Your commitment to 
-              nurturing these precious children both spiritually and educationally is making an eternal 
-              impact. Through your service, you're showing Christ's love in tangible ways and helping 
-              transform lives.
-            </p>
-            <p className="mb-6">
-              "And the King will answer them, 'Truly, I say to you, as you did it to one of the least 
-              of these my brothers, you did it to me.'" - Matthew 25:40
-            </p>
-          </div>
-
-          {/* Bridge of Hope Center Information */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Bridge of Hope Center</h3>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Center Name</dt>
-                <dd className="mt-1 text-sm text-gray-900">{missionary.bridge_of_hope_name || 'Not assigned'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Center ID</dt>
-                <dd className="mt-1 text-sm text-gray-900">{missionary.bridge_of_hope_id || 'Not assigned'}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderSponsorWelcome = (sponsor: AuthenticatedUser) => (
-    <div className="bg-white shadow rounded-lg p-6 mb-6">
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0">
-          <Heart className="h-8 w-8 text-red-600" />
-        </div>
-        <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, Dear Sponsor</h2>
-          <div className="prose max-w-none text-gray-600">
-            <p className="mb-4">
-              Thank you for your heart to help transform a child's life through sponsorship. Your 
-              support provides education, hope, and the opportunity for a child to experience Christ's 
-              love. You're making an eternal difference by investing in a precious life.
-            </p>
-            <p className="mb-4">
-              "Do not lay up for yourselves treasures on earth, where moth and rust destroy and where 
-              thieves break in and steal, but lay up for yourselves treasures in heaven..." - Matthew 6:19-20
-            </p>
-            <p className="mb-6">
-              May God bless you abundantly for your generosity and compassion in helping those in need.
-            </p>
-          </div>
-
-          {/* Sponsorship Information */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Sponsorship Details</h3>
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Sponsor ID</dt>
-                <dd className="mt-1 text-sm text-gray-900">{sponsor.sponsor_id}</dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Child ID</dt>
-                <dd className="mt-1 text-sm text-gray-900">{sponsor.child_id}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   if (loading) {
     return (
@@ -346,36 +231,32 @@ export default function Dashboard() {
             </div>
           ) : (
             currentUser && !currentUser.is_administrator && (
-              <>
-                {currentUser.is_missionary && renderMissionaryWelcome(currentUser)}
-                {currentUser.is_sponsor && renderSponsorWelcome(currentUser)}
-                {!currentUser.is_missionary && !currentUser.is_sponsor && !currentUser.is_bridge_of_hope && (
-                  <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <UserCheck className="h-5 w-5 text-green-400" />
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm text-green-700">
-                          Your account is approved. You have access to the system.
-                        </p>
-                      </div>
-                    </div>
+              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <UserCheck className="h-5 w-5 text-green-400" />
                   </div>
-                )}
-              </>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">
+                      Your account is approved. You have access to the system as a
+                      {currentUser.is_missionary && ' Missionary'}
+                      {currentUser.is_sponsor && ' Sponsor'}.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )
           )}
           
-          {currentUser?.approved && currentUser.is_administrator && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium mb-4">Welcome!</h2>
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  You are signed in as <span className="font-medium">{user?.email}</span>
-                </p>
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-medium mb-4">Welcome!</h2>
+            <div className="space-y-4">
+              <p className="text-gray-600">
+                You are signed in as <span className="font-medium">{user?.email}</span>
+              </p>
 
-                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+              {currentUser?.approved && currentUser.is_administrator && (
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                   <Link to="/administrators" className="block">
                     <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
@@ -390,11 +271,6 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-indigo-900">
                                 {userCounts.administrators}
-                                {userCounts.pendingAdministrators > 0 && (
-                                  <span className="ml-2 text-sm font-medium text-amber-600">
-                                    +{userCounts.pendingAdministrators} pending
-                                  </span>
-                                )}
                               </dd>
                             </dl>
                           </div>
@@ -417,11 +293,6 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-green-900">
                                 {userCounts.missionaries}
-                                {userCounts.pendingMissionaries > 0 && (
-                                  <span className="ml-2 text-sm font-medium text-amber-600">
-                                    +{userCounts.pendingMissionaries} pending
-                                  </span>
-                                )}
                               </dd>
                             </dl>
                           </div>
@@ -444,38 +315,6 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-blue-900">
                                 {userCounts.sponsors}
-                                {userCounts.pendingSponsors > 0 && (
-                                  <span className="ml-2 text-sm font-medium text-amber-600">
-                                    +{userCounts.pendingSponsors} pending
-                                  </span>
-                                )}
-                              </dd>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-
-                  <Link to="/bridge-of-hope-centers" className="block">
-                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
-                      <div className="p-5">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0">
-                            <Home className="h-6 w-6 text-purple-600" />
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">
-                                Bridge of Hope Centers
-                              </dt>
-                              <dd className="text-lg font-medium text-purple-900">
-                                {userCounts.bridgeOfHopeCenters}
-                                {userCounts.pendingBridgeOfHopeCenters > 0 && (
-                                  <span className="ml-2 text-sm font-medium text-amber-600">
-                                    +{userCounts.pendingBridgeOfHopeCenters} pending
-                                  </span>
-                                )}
                               </dd>
                             </dl>
                           </div>
@@ -494,7 +333,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Total Pending
+                                Pending Approval
                               </dt>
                               <dd className="text-lg font-medium text-yellow-900">
                                 {userCounts.pending}
@@ -506,9 +345,9 @@ export default function Dashboard() {
                     </div>
                   </Link>
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </main>
     </div>
