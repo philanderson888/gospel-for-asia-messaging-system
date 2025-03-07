@@ -15,6 +15,8 @@ export default function Register() {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [sponsorId, setSponsorId] = useState('');
   const [childId, setChildId] = useState('');
+  const [bridgeOfHopeName, setBridgeOfHopeName] = useState('');
+  const [bridgeOfHopeId, setBridgeOfHopeId] = useState('');
   const [loading, setLoading] = useState(false);
   const isFirstRender = useRef(true);
 
@@ -58,6 +60,22 @@ export default function Register() {
     return true;
   };
 
+  const validateBridgeOfHopeId = () => {
+    if (selectedRole !== 'missionary' || !bridgeOfHopeId) return true;
+
+    if (!/^\d+$/.test(bridgeOfHopeId)) {
+      toast.error('Bridge of Hope ID must contain only numbers');
+      return false;
+    }
+
+    if (bridgeOfHopeId.length > 8) {
+      toast.error('Bridge of Hope ID must be 8 digits or less');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -70,7 +88,7 @@ export default function Register() {
         throw new Error('Please select a role');
       }
 
-      if (!validateSponsorFields()) {
+      if (!validateSponsorFields() || !validateBridgeOfHopeId()) {
         setLoading(false);
         return;
       }
@@ -101,7 +119,9 @@ export default function Register() {
             approved_by: null,
             approved_date_time: null,
             sponsor_id: selectedRole === 'sponsor' ? sponsorId : null,
-            child_id: selectedRole === 'sponsor' ? childId : null
+            child_id: selectedRole === 'sponsor' ? childId : null,
+            bridge_of_hope_name: selectedRole === 'missionary' ? bridgeOfHopeName : null,
+            bridge_of_hope_id: selectedRole === 'missionary' ? bridgeOfHopeId : null
           }
         ]);
 
@@ -221,6 +241,50 @@ export default function Register() {
               </label>
             </div>
           </div>
+
+          {/* Missionary-specific fields */}
+          {selectedRole === 'missionary' && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <label htmlFor="bridge-of-hope-name" className="block text-sm font-medium text-gray-700">
+                  Bridge of Hope Center Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="bridge-of-hope-name"
+                    id="bridge-of-hope-name"
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter Bridge of Hope Center Name (optional)"
+                    value={bridgeOfHopeName}
+                    onChange={(e) => setBridgeOfHopeName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="bridge-of-hope-id" className="block text-sm font-medium text-gray-700">
+                  Bridge of Hope Center ID
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="bridge-of-hope-id"
+                    id="bridge-of-hope-id"
+                    pattern="[0-9]{1,8}"
+                    maxLength={8}
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    placeholder="Enter Bridge of Hope Center ID (optional)"
+                    value={bridgeOfHopeId}
+                    onChange={(e) => setBridgeOfHopeId(e.target.value)}
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500">
+                  Optional: Enter your Bridge of Hope Center ID (up to 8 digits)
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Sponsor-specific fields */}
           {selectedRole === 'sponsor' && (
