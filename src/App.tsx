@@ -71,6 +71,14 @@ function App() {
               }
             />
             <Route
+              path="/messages/:sponsorId"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/pending"
               element={
                 <ProtectedRoute requireAdmin={true}>
