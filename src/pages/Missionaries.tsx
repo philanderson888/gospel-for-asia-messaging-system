@@ -10,6 +10,8 @@ interface Missionary {
   email: string;
   created_at: string;
   approved: boolean | null;
+  bridge_of_hope_name: string | null;
+  bridge_of_hope_id: string | null;
 }
 
 export default function Missionaries() {
@@ -57,12 +59,12 @@ export default function Missionaries() {
       // Log missionaries
       console.log('\nPending missionaries:');
       (pendingData || []).forEach(missionary => {
-        console.log(`- ${missionary.email}`);
+        console.log(`- ${missionary.email} (Bridge of Hope: ${missionary.bridge_of_hope_name || 'Not provided'})`);
       });
       
       console.log('\nApproved missionaries:');
       (approvedData || []).forEach(missionary => {
-        console.log(`- ${missionary.email}`);
+        console.log(`- ${missionary.email} (Bridge of Hope: ${missionary.bridge_of_hope_name || 'Not provided'})`);
       });
       console.log(''); // Empty line for better readability
     } catch (error: any) {
@@ -172,6 +174,12 @@ export default function Missionaries() {
                         Email
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Bridge of Hope Center
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Center ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Requested
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -184,6 +192,12 @@ export default function Missionaries() {
                       <tr key={missionary.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {missionary.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {missionary.bridge_of_hope_name || 'Not provided'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {missionary.bridge_of_hope_id || 'Not provided'}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(missionary.created_at).toLocaleDateString()}
@@ -225,6 +239,12 @@ export default function Missionaries() {
                       Email
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Bridge of Hope Center
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Center ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Added
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -237,6 +257,12 @@ export default function Missionaries() {
                     <tr key={missionary.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {missionary.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {missionary.bridge_of_hope_name || 'Not provided'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {missionary.bridge_of_hope_id || 'Not provided'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(missionary.created_at).toLocaleDateString()}
