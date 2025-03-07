@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck, MessageCircle, School } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, MessageCircle, School, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -328,6 +328,101 @@ export default function Dashboard() {
                 </>
               )}
 
+              {/* Sponsor Dashboard Content */}
+              {currentUser.is_sponsor && (
+                <>
+                  {/* Sponsor Welcome Message */}
+                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg mb-6">
+                    <div className="p-8">
+                      <h1 className="text-2xl font-bold text-white mb-2">
+                        Welcome, {user?.email}!
+                      </h1>
+                      <p className="text-blue-100 mb-4">
+                        "Let us not become weary in doing good, for at the proper time we will reap a harvest if we do not give up." - Galatians 6:9
+                      </p>
+                      <p className="text-blue-100">
+                        Your sponsorship is making a real difference in a child's life. Through your support and prayers, 
+                        you're helping to provide education, nutrition, and spiritual guidance. Keep encouraging your sponsored 
+                        child through your messages - your words mean more than you know!
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {/* Messages Card */}
+                    <div className="bg-white shadow rounded-lg overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex items-center mb-4">
+                          <MessageCircle className="h-6 w-6 text-purple-600 mr-2" />
+                          <h3 className="text-lg font-medium text-gray-900">Messages</h3>
+                        </div>
+                        <p className="text-gray-600 mb-4">
+                          Stay connected with your sponsored child through personal messages
+                        </p>
+                        <div className="mt-4">
+                          <Link
+                            to="/messages"
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            View Messages
+                            {userCounts.unreadMessages > 0 && (
+                              <span className="ml-2 px-2 py-1 text-xs bg-purple-800 rounded-full">
+                                {userCounts.unreadMessages} new
+                              </span>
+                            )}
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Prayer Focus Card */}
+                    <div className="bg-white shadow rounded-lg overflow-hidden">
+                      <div className="p-6">
+                        <div className="flex items-center mb-4">
+                          <Heart className="h-6 w-6 text-red-600 mr-2" />
+                          <h3 className="text-lg font-medium text-gray-900">Prayer Focus</h3>
+                        </div>
+                        <p className="text-gray-600 mb-4">
+                          This week's prayer focus for your sponsored child:
+                        </p>
+                        <div className="bg-red-50 rounded-lg p-4">
+                          <p className="text-red-800">
+                            "May the God of hope fill you with all joy and peace as you trust in him, 
+                            so that you may overflow with hope by the power of the Holy Spirit." 
+                            - Romans 15:13
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Unread Messages Card */}
+                  <Link to="/messages" className="block">
+                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <MessageCircle className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                Unread Messages
+                              </dt>
+                              <dd className="text-lg font-medium text-purple-900">
+                                {userCounts.unreadMessages}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </>
+              )}
+
               {/* Administrator Stats */}
               {currentUser.is_administrator && (
                 <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -419,31 +514,6 @@ export default function Dashboard() {
                     </div>
                   </Link>
                 </div>
-              )}
-
-              {/* Sponsor Messages */}
-              {currentUser.is_sponsor && (
-                <Link to="/messages" className="block">
-                  <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <MessageCircle className="h-6 w-6 text-purple-600" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 truncate">
-                              Unread Messages
-                            </dt>
-                            <dd className="text-lg font-medium text-purple-900">
-                              {userCounts.unreadMessages}
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
               )}
             </>
           )}
