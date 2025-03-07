@@ -27,9 +27,6 @@ export default function MissionaryDashboard() {
       if (!user) return;
 
       try {
-        console.log('\n=== Loading Missionary Dashboard ===');
-        console.log('Loading data for missionary:', user.email);
-
         // Get missionary's details
         const { data: userData, error: userError } = await supabase
           .from('authenticated_users')
@@ -38,20 +35,16 @@ export default function MissionaryDashboard() {
           .single();
 
         if (userError) throw userError;
-
-        console.log('Missionary details:', userData);
         setCurrentUser(userData);
 
         if (userData.bridge_of_hope_id) {
           // Get Bridge of Hope center details
           const centerData = getCenterByMissionary(userData.bridge_of_hope_id);
-          console.log('Bridge of Hope center:', centerData);
           setCenter(centerData);
 
           if (centerData) {
             // Get children at this center
             const centerChildren = getChildrenByCenter(centerData.center_id);
-            console.log('Children at center:', centerChildren);
             setChildren(centerChildren);
           }
         }
@@ -91,7 +84,7 @@ export default function MissionaryDashboard() {
           <div className="p-6">
             <div className="flex items-center mb-4">
               <School className="h-6 w-6 text-indigo-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">Your Bridge of Hope Center</h2>
+              <h2 className="text-lg font-medium text-gray-900">Bridge of Hope Center Details</h2>
             </div>
             {center ? (
               <div className="space-y-4">
@@ -110,60 +103,12 @@ export default function MissionaryDashboard() {
           </div>
         </div>
 
-        {/* Quick Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Children Card */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <Users className="h-6 w-6 text-green-600 mr-2" />
-                <h3 className="text-lg font-medium text-gray-900">Children</h3>
-              </div>
-              <p className="text-gray-600 mb-4">
-                View and manage children at your Bridge of Hope center
-              </p>
-              <div className="mt-4">
-                <button
-                  onClick={() => {
-                    const element = document.getElementById('children-section');
-                    element?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-                >
-                  View Children
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Messages Card */}
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <MessageCircle className="h-6 w-6 text-purple-600 mr-2" />
-                <h3 className="text-lg font-medium text-gray-900">Messages</h3>
-              </div>
-              <p className="text-gray-600 mb-4">
-                Manage messages between sponsors and children (Coming Soon)
-              </p>
-              <div className="mt-4">
-                <button
-                  disabled
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-400 cursor-not-allowed"
-                >
-                  Coming Soon
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Children Section */}
-        <div id="children-section" className="bg-white shadow rounded-lg">
+        {/* Children List */}
+        <div className="bg-white shadow rounded-lg">
           <div className="p-6">
             <div className="flex items-center mb-4">
               <Users className="h-6 w-6 text-indigo-600 mr-2" />
-              <h2 className="text-lg font-medium text-gray-900">Children at Your Center</h2>
+              <h2 className="text-lg font-medium text-gray-900">Children at this Center</h2>
             </div>
             {children.length > 0 ? (
               <div className="overflow-x-auto">
@@ -180,14 +125,17 @@ export default function MissionaryDashboard() {
                         Date of Birth
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Sponsorship Status
+                        Sponsor Status
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {children.map((child) => (
                       <tr key={child.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {child.name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -197,15 +145,22 @@ export default function MissionaryDashboard() {
                           {new Date(child.date_of_birth).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {child.sponsor_id ? (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                              Sponsored
-                            </span>
-                          ) : (
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                              Awaiting Sponsor
-                            </span>
-                          )}
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            child.sponsor_id
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {child.sponsor_id ? 'Sponsored' : 'Needs Sponsor'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => {/* View messages implementation */}}
+                            className="text-indigo-600 hover:text-indigo-900 inline-flex items-center"
+                          >
+                            <MessageCircle className="h-4 w-4 mr-1" />
+                            View Messages
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -213,7 +168,7 @@ export default function MissionaryDashboard() {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-500">No children registered at this center yet.</p>
+              <p className="text-gray-500">No children registered at this center.</p>
             )}
           </div>
         </div>
