@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck, Home } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, Home, Heart, Gift, HelpingHand } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,6 +15,10 @@ interface AuthenticatedUser {
   approved: boolean | null;
   approved_by: string | null;
   approved_date_time: string | null;
+  sponsor_id: string | null;
+  child_id: string | null;
+  bridge_of_hope_name: string | null;
+  bridge_of_hope_id: string | null;
 }
 
 interface UserCounts {
@@ -199,6 +203,88 @@ export default function Dashboard() {
     }
   };
 
+  const renderMissionaryWelcome = (missionary: AuthenticatedUser) => (
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <div className="flex items-start space-x-4">
+        <div className="flex-shrink-0">
+          <HelpingHand className="h-8 w-8 text-indigo-600" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, Dear Missionary</h2>
+          <div className="prose max-w-none text-gray-600">
+            <p className="mb-4">
+              Thank you for your dedication to serving at our Bridge of Hope center. Your commitment to 
+              nurturing these precious children both spiritually and educationally is making an eternal 
+              impact. Through your service, you're showing Christ's love in tangible ways and helping 
+              transform lives.
+            </p>
+            <p className="mb-6">
+              "And the King will answer them, 'Truly, I say to you, as you did it to one of the least 
+              of these my brothers, you did it to me.'" - Matthew 25:40
+            </p>
+          </div>
+
+          {/* Bridge of Hope Center Information */}
+          <div className="mt-6 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Bridge of Hope Center</h3>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Center Name</dt>
+                <dd className="mt-1 text-sm text-gray-900">{missionary.bridge_of_hope_name || 'Not assigned'}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Center ID</dt>
+                <dd className="mt-1 text-sm text-gray-900">{missionary.bridge_of_hope_id || 'Not assigned'}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSponsorWelcome = (sponsor: AuthenticatedUser) => (
+    <div className="bg-white shadow rounded-lg p-6 mb-6">
+      <div className="flex items-start space-x-4">
+        <div className="flex-shrink-0">
+          <Heart className="h-8 w-8 text-red-600" />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome, Dear Sponsor</h2>
+          <div className="prose max-w-none text-gray-600">
+            <p className="mb-4">
+              Thank you for your heart to help transform a child's life through sponsorship. Your 
+              support provides education, hope, and the opportunity for a child to experience Christ's 
+              love. You're making an eternal difference by investing in a precious life.
+            </p>
+            <p className="mb-4">
+              "Do not lay up for yourselves treasures on earth, where moth and rust destroy and where 
+              thieves break in and steal, but lay up for yourselves treasures in heaven..." - Matthew 6:19-20
+            </p>
+            <p className="mb-6">
+              May God bless you abundantly for your generosity and compassion in helping those in need.
+            </p>
+          </div>
+
+          {/* Sponsorship Information */}
+          <div className="mt-6 bg-gray-50 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Sponsorship Details</h3>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Sponsor ID</dt>
+                <dd className="mt-1 text-sm text-gray-900">{sponsor.sponsor_id}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Child ID</dt>
+                <dd className="mt-1 text-sm text-gray-900">{sponsor.child_id}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -260,34 +346,36 @@ export default function Dashboard() {
             </div>
           ) : (
             currentUser && !currentUser.is_administrator && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <UserCheck className="h-5 w-5 text-green-400" />
+              <>
+                {currentUser.is_missionary && renderMissionaryWelcome(currentUser)}
+                {currentUser.is_sponsor && renderSponsorWelcome(currentUser)}
+                {!currentUser.is_missionary && !currentUser.is_sponsor && !currentUser.is_bridge_of_hope && (
+                  <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <UserCheck className="h-5 w-5 text-green-400" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-green-700">
+                          Your account is approved. You have access to the system.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-green-700">
-                      Your account is approved. You have access to the system as a
-                      {currentUser.is_missionary && ' Missionary'}
-                      {currentUser.is_sponsor && ' Sponsor'}
-                      {currentUser.is_bridge_of_hope && ' Bridge of Hope Center'}
-                      .
-                    </p>
-                  </div>
-                </div>
-              </div>
+                )}
+              </>
             )
           )}
           
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium mb-4">Welcome!</h2>
-            <div className="space-y-4">
-              <p className="text-gray-600">
-                You are signed in as <span className="font-medium">{user?.email}</span>
-              </p>
+          {currentUser?.approved && currentUser.is_administrator && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium mb-4">Welcome!</h2>
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  You are signed in as <span className="font-medium">{user?.email}</span>
+                </p>
 
-              {currentUser?.approved && currentUser.is_administrator && (
-                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg: grid-cols-5">
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
                   <Link to="/administrators" className="block">
                     <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
@@ -418,9 +506,9 @@ export default function Dashboard() {
                     </div>
                   </Link>
                 </div>
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>
