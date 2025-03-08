@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, Users, AlertCircle, UserCheck, MessageCircle, School, Heart } from 'lucide-react';
+import { LogOut, Users, AlertCircle, UserCheck, MessageCircle, School, Heart, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
@@ -113,6 +113,11 @@ export default function Dashboard() {
             console.error('Error fetching authenticated users:', error);
             return;
           }
+
+          // Reset pending counts
+          setPendingAdministrators(0);
+          setPendingMissionaries(0);
+          setPendingSponsors(0);
 
           // Categorize users
           const userLists: UserLists = {
@@ -445,7 +450,7 @@ export default function Dashboard() {
 
               {/* Administrator Stats */}
               {currentUser.is_administrator && (
-                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
                   <Link to="/administrators" className="block">
                     <div className="bg-indigo-50 overflow-hidden shadow rounded-lg">
                       <div className="p-5">
@@ -553,6 +558,28 @@ export default function Dashboard() {
                               </dt>
                               <dd className="text-lg font-medium text-yellow-900">
                                 {userCounts.pending}
+                              </dd>
+                            </dl>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <Link to="/authenticated-users" className="block">
+                    <div className="bg-purple-50 overflow-hidden shadow rounded-lg">
+                      <div className="p-5">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            <UserPlus className="h-6 w-6 text-purple-600" />
+                          </div>
+                          <div className="ml-5 w-0 flex-1">
+                            <dl>
+                              <dt className="text-sm font-medium text-gray-500 truncate">
+                                All Users
+                              </dt>
+                              <dd className="text-lg font-medium text-purple-900">
+                                {userCounts.administrators + userCounts.missionaries + userCounts.sponsors}
                               </dd>
                             </dl>
                           </div>
