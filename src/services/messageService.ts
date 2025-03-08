@@ -20,25 +20,29 @@ const initializeMessages = () => {
         id: '1',
         sponsor_id: '12345678',
         created_at: threeDaysAgo.toISOString(),
-        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor.',
+        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor. Here is a picture of the beautiful mountains near my home.',
         message_has_been_read: true,
-        message_direction: 'to_child'
+        message_direction: 'to_child',
+        image01_url: 'https://picsum.photos/800/600?random=1'
       },
       {
         id: '2',
         sponsor_id: '12345678',
         created_at: twoDaysAgo.toISOString(),
-        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics.',
+        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. Here is a picture of me with my friends at the Bridge of Hope center.',
         message_has_been_read: true,
-        message_direction: 'to_sponsor'
+        message_direction: 'to_sponsor',
+        image01_url: 'https://picsum.photos/800/600?random=2'
       },
       {
         id: '3',
         sponsor_id: '12345678',
         created_at: yesterday.toISOString(),
-        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too.',
+        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too. Here are some pictures of my family celebrating Christmas.',
         message_has_been_read: false,
-        message_direction: 'to_child'
+        message_direction: 'to_child',
+        image01_url: 'https://picsum.photos/800/600?random=3',
+        image02_url: 'https://picsum.photos/800/600?random=4'
       }
     ];
 
@@ -114,6 +118,12 @@ export const logMessages = () => {
     console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
     console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
     console.log(`Text: ${message.message_text}`);
+    if (message.image01_url) {
+      console.log(`Image 1: ${message.image01_url}`);
+    }
+    if (message.image02_url) {
+      console.log(`Image 2: ${message.image02_url}`);
+    }
   });
   console.log('\n');
 };
@@ -133,6 +143,12 @@ export const logRecentMessagesForCenter = (bridgeOfHopeId: string) => {
       console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
       console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
       console.log(`Text: ${message.message_text}`);
+      if (message.image01_url) {
+        console.log(`Image 1: ${message.image01_url}`);
+      }
+      if (message.image02_url) {
+        console.log(`Image 2: ${message.image02_url}`);
+      }
     });
   }
   console.log('\n');
