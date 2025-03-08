@@ -295,3 +295,63 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Supabase team for the excellent backend service
 - React team for the robust frontend framework
 - Open source community for various tools and libraries
+
+## 📋 Upcoming Features & Improvements
+
+### Child Biography System
+- [ ] Add detailed child profile pages
+  - Photo gallery
+  - Background information
+  - Academic progress
+  - Interests and aspirations
+  - Prayer requests
+- [ ] Real-time profile updates by missionaries
+- [ ] Secure access for sponsors and missionaries
+- [ ] Age-appropriate information display
+
+### Enhanced Message Security
+- [ ] Message approval system for sponsor communications
+  - [ ] Manual admin approval workflow
+  - [ ] AI-powered content screening
+    - Automatic detection of personal information
+    - Social media handle detection
+    - Contact information screening
+    - Hyperlink validation
+    - Address and phone number detection
+- [ ] Direct message approval for child/missionary communications
+- [ ] Notification system for pending approvals
+
+### Image Messaging System
+- [ ] Support for image attachments in messages
+  - One image per message policy
+  - Image size and format restrictions
+  - Automatic image screening
+- [ ] Admin approval workflow for sponsor-sent images
+- [ ] Image gallery for approved photos
+- [ ] Secure image storage and delivery
+
+### Database Improvements
+- [ ] Migration to production Supabase instance
+- [ ] Enhanced data models for new features
+- [ ] Optimization of database queries
+- [ ] Improved row-level security policies
+- [ ] Backup and recovery procedures
+
+### Mobile Application
+- [ ] React Native mobile app development
+  - iOS support
+  - Android support
+- [ ] Native device features integration
+  - Push notifications
+  - Camera integration
+  - Offline support
+- [ ] Mobile-specific UI/UX optimizations
+- [ ] App store deployment preparation
+
+### General Improvements
+- [ ] Performance optimization
+- [ ] Accessibility enhancements
+- [ ] Internationalization support
+- [ ] Enhanced error handling
+- [ ] Comprehensive testing suite
+- [ ] Documentation updates
