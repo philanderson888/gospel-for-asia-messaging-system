@@ -247,6 +247,20 @@ export default function Dashboard() {
             </div>
           ) : (
             <>
+              {/* Administrator Welcome Banner */}
+              {currentUser.is_administrator && (
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg mb-6">
+                  <div className="p-8">
+                    <h1 className="text-2xl font-bold text-white mb-2">
+                      Bridge of Hope Administrator's Dashboard
+                    </h1>
+                    <p className="text-blue-100">
+                      "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters." - Colossians 3:23
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Missionary Dashboard Content */}
               {currentUser.is_missionary && (
                 <>
