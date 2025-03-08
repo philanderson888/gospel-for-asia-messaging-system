@@ -6,8 +6,9 @@ import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { logMessages, getUnreadMessagesCount } from '../services/messageService';
 import { logCenters, getCenterByMissionary } from '../services/bridgeOfHopeCenterService';
-import { logChildren } from '../services/childService';
+import { logChildren, getChildrenByCenter, getChildBySponsorId } from '../services/childService';
 import { BridgeOfHopeCenter } from '../types/bridgeOfHopeCenter';
+import { Child } from '../types/child';
 
 interface AuthenticatedUser {
   id: string;
@@ -22,6 +23,7 @@ interface AuthenticatedUser {
   sponsor_id: string | null;
   bridge_of_hope_id: string | null;
   bridge_of_hope_name: string | null;
+  child_id: string | null;
 }
 
 interface UserCounts {
@@ -47,6 +49,7 @@ export default function Dashboard() {
   const isFirstRender = useRef(true);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
   const [center, setCenter] = useState<BridgeOfHopeCenter | null>(null);
+  const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingAdministrators, setPendingAdministrators] = useState(0);
   const [pendingMissionaries, setPendingMissionaries] = useState(0);
@@ -66,7 +69,6 @@ export default function Dashboard() {
       if (!user) return;
 
       try {
-        console.log('\n=== Checking User Status ===');
         // First check the current user's status
         const { data: userData, error: userError } = await supabase
           .from('authenticated_users')
@@ -80,7 +82,42 @@ export default function Dashboard() {
         }
 
         setCurrentUser(userData);
-        console.log('Current user status:', userData);
+
+        // Log initial dashboard access
+        console.log('\n===============');
+        console.log('Dashboard Access');
+        console.log('===============\n');
+
+        // Enhanced user logging based on role
+        console.log('=== Current User Details ===');
+        console.log('Email:', userData.email);
+
+        if (userData.is_sponsor) {
+          console.log('Role: Sponsor');
+          console.log('Sponsor ID:', userData.sponsor_id);
+          console.log('Child ID:', userData.child_id);
+          
+          // Get child's Bridge of Hope center ID
+          const sponsoredChild = getChildBySponsorId(userData.sponsor_id || '');
+          if (sponsoredChild) {
+            console.log('Bridge of Hope Center ID:', sponsoredChild.bridge_of_hope_center_id);
+          }
+        } else if (userData.is_missionary) {
+          console.log('Role: Missionary');
+          console.log('Bridge of Hope Center ID:', userData.bridge_of_hope_id);
+          
+          // Get and log all children in this center
+          if (userData.bridge_of_hope_id) {
+            const centerChildren = getChildrenByCenter(userData.bridge_of_hope_id);
+            console.log('\nChildren in this center:');
+            centerChildren.forEach(child => {
+              console.log(`- Child ID: ${child.child_id}`);
+            });
+          }
+        } else if (userData.is_administrator) {
+          console.log('Role: Administrator');
+        }
+        console.log(''); // Empty line for better readability
 
         // Log all local storage data
         logMessages();
@@ -93,10 +130,15 @@ export default function Dashboard() {
           setUserCounts(prev => ({ ...prev, unreadMessages: unreadCount }));
         }
 
-        // If user is a missionary, get their center details
+        // If user is a missionary, get their center details and children
         if (userData?.is_missionary && userData?.bridge_of_hope_id) {
           const centerData = getCenterByMissionary(userData.bridge_of_hope_id);
           setCenter(centerData);
+          
+          if (centerData) {
+            const centerChildren = getChildrenByCenter(centerData.center_id);
+            setChildren(centerChildren);
+          }
         }
 
         // Only load other data if the current user is approved
@@ -149,7 +191,7 @@ export default function Dashboard() {
             pending: userLists.pending.length
           }));
 
-          // Log user details
+          // Log user statistics
           console.log('\n=== User Statistics ===');
           console.log('Administrators:', userLists.administrators.length);
           console.log('Missionaries:', userLists.missionaries.length);
@@ -157,6 +199,7 @@ export default function Dashboard() {
           console.log('Pending:', userLists.pending.length);
           console.log('Bridge of Hope Centers:', 1);
           console.log('Children:', 1);
+          console.log(''); // Empty line for better readability
         }
       } catch (error) {
         console.error('Error processing users:', error);
@@ -166,17 +209,12 @@ export default function Dashboard() {
     };
 
     if (isFirstRender.current && user) {
-      console.log('\n===============');
-      console.log('Dashboard');
-      console.log('===============\n');
-      console.log('Current user:', user.email);
       checkUserStatusAndLoadData();
       isFirstRender.current = false;
     }
   }, [user]);
 
   const handleSignOut = async () => {
-    console.log('Sign out requested');
     try {
       const { error } = await supabase.auth.signOut();
       
