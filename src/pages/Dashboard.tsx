@@ -48,6 +48,9 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
   const [center, setCenter] = useState<BridgeOfHopeCenter | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingAdministrators, setPendingAdministrators] = useState(0);
+  const [pendingMissionaries, setPendingMissionaries] = useState(0);
+  const [pendingSponsors, setPendingSponsors] = useState(0);
   const [userCounts, setUserCounts] = useState<UserCounts>({
     administrators: 0,
     missionaries: 0,
@@ -122,6 +125,9 @@ export default function Dashboard() {
           allUsers?.forEach(user => {
             if (user.approved === null || user.approved === false) {
               userLists.pending.push(user);
+              if (user.is_administrator) setPendingAdministrators(prev => prev + 1);
+              if (user.is_missionary) setPendingMissionaries(prev => prev + 1);
+              if (user.is_sponsor) setPendingSponsors(prev => prev + 1);
             } else {
               if (user.is_administrator) userLists.administrators.push(user);
               if (user.is_missionary) userLists.missionaries.push(user);
@@ -438,8 +444,17 @@ export default function Dashboard() {
                               <dt className="text-sm font-medium text-gray-500 truncate">
                                 Administrators
                               </dt>
-                              <dd className="text-lg font-medium text-indigo-900">
-                                {userCounts.administrators}
+                              <dd className="flex items-baseline">
+                                <div className="text-lg font-medium text-indigo-900">
+                                  {userCounts.administrators}
+                                </div>
+                                {pendingAdministrators > 0 && (
+                                  <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                    <span className="px-2 py-0.5 rounded-full bg-red-100">
+                                      {pendingAdministrators} pending
+                                    </span>
+                                  </div>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -460,8 +475,17 @@ export default function Dashboard() {
                               <dt className="text-sm font-medium text-gray-500 truncate">
                                 Missionaries
                               </dt>
-                              <dd className="text-lg font-medium text-green-900">
-                                {userCounts.missionaries}
+                              <dd className="flex items-baseline">
+                                <div className="text-lg font-medium text-green-900">
+                                  {userCounts.missionaries}
+                                </div>
+                                {pendingMissionaries > 0 && (
+                                  <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                    <span className="px-2 py-0.5 rounded-full bg-red-100">
+                                      {pendingMissionaries} pending
+                                    </span>
+                                  </div>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -482,8 +506,17 @@ export default function Dashboard() {
                               <dt className="text-sm font-medium text-gray-500 truncate">
                                 Sponsors
                               </dt>
-                              <dd className="text-lg font-medium text-blue-900">
-                                {userCounts.sponsors}
+                              <dd className="flex items-baseline">
+                                <div className="text-lg font-medium text-blue-900">
+                                  {userCounts.sponsors}
+                                </div>
+                                {pendingSponsors > 0 && (
+                                  <div className="ml-2 flex items-baseline text-sm font-semibold text-red-600">
+                                    <span className="px-2 py-0.5 rounded-full bg-red-100">
+                                      {pendingSponsors} pending
+                                    </span>
+                                  </div>
+                                )}
                               </dd>
                             </dl>
                           </div>
@@ -502,7 +535,7 @@ export default function Dashboard() {
                           <div className="ml-5 w-0 flex-1">
                             <dl>
                               <dt className="text-sm font-medium text-gray-500 truncate">
-                                Pending Approval
+                                New Users Pending
                               </dt>
                               <dd className="text-lg font-medium text-yellow-900">
                                 {userCounts.pending}

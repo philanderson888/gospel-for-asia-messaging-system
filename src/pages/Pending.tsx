@@ -105,7 +105,7 @@ export default function Pending() {
         </div>
         <div className="bg-white shadow rounded-lg">
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Pending Users</h2>
+            <h2 className="text-lg font-medium mb-4">New Users Pending Approval</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
