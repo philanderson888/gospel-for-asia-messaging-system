@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { Trash2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Trash2, ArrowLeft, CheckCircle, XCircle, Edit2, Save, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Sponsor {
@@ -10,8 +10,14 @@ interface Sponsor {
   email: string;
   created_at: string;
   approved: boolean | null;
-  sponsor_id: string;
-  child_id: string;
+  sponsor_id: string | null;
+  child_id: string | null;
+}
+
+interface EditingState {
+  id: string | null;
+  field: 'sponsor_id' | 'child_id' | null;
+  value: string;
 }
 
 export default function Sponsors() {
@@ -19,6 +25,7 @@ export default function Sponsors() {
   const [pendingSponsors, setPendingSponsors] = useState<Sponsor[]>([]);
   const [approvedSponsors, setApprovedSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<EditingState>({ id: null, field: null, value: '' });
   const isFirstRender = useRef(true);
 
   useEffect(() => {
@@ -140,6 +147,114 @@ export default function Sponsors() {
     }
   };
 
+  const startEditing = (id: string, field: 'sponsor_id' | 'child_id', value: string | null) => {
+    setEditing({ id, field, value: value || '' });
+  };
+
+  const cancelEditing = () => {
+    setEditing({ id: null, field: null, value: '' });
+  };
+
+  const validateId = (value: string, field: 'sponsor_id' | 'child_id'): boolean => {
+    if (!value) {
+      toast.error(`${field === 'sponsor_id' ? 'Sponsor' : 'Child'} ID is required`);
+      return false;
+    }
+
+    if (!/^\d+$/.test(value)) {
+      toast.error(`${field === 'sponsor_id' ? 'Sponsor' : 'Child'} ID must contain only numbers`);
+      return false;
+    }
+
+    const maxLength = field === 'sponsor_id' ? 8 : 10;
+    if (value.length > maxLength) {
+      toast.error(`${field === 'sponsor_id' ? 'Sponsor' : 'Child'} ID must be ${maxLength} digits or less`);
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSave = async () => {
+    if (!editing.id || !editing.field) return;
+
+    if (!validateId(editing.value, editing.field)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('authenticated_users')
+        .update({ [editing.field]: editing.value })
+        .eq('id', editing.id);
+
+      if (error) throw error;
+
+      toast.success('Updated successfully');
+      loadSponsors();
+      cancelEditing();
+    } catch (error: any) {
+      toast.error('Failed to update');
+      console.error('Error updating:', error);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const maxLength = editing.field === 'sponsor_id' ? 8 : 10;
+    const numbersOnly = value.replace(/[^\d]/g, '').slice(0, maxLength);
+    setEditing({ ...editing, value: numbersOnly });
+  };
+
+  const renderEditableCell = (sponsor: Sponsor, field: 'sponsor_id' | 'child_id') => {
+    const isEditing = editing.id === sponsor.id && editing.field === field;
+    const value = sponsor[field];
+    
+    if (isEditing) {
+      return (
+        <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            value={editing.value}
+            onChange={handleInputChange}
+            maxLength={field === 'sponsor_id' ? 8 : 10}
+            pattern="[0-9]*"
+            inputMode="numeric"
+            className="block w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            placeholder={`Enter ${field === 'sponsor_id' ? 'Sponsor' : 'Child'} ID`}
+          />
+          <button
+            onClick={handleSave}
+            className="text-green-600 hover:text-green-900"
+            title="Save"
+          >
+            <Save className="h-4 w-4" />
+          </button>
+          <button
+            onClick={cancelEditing}
+            className="text-red-600 hover:text-red-900"
+            title="Cancel"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center group">
+        <span className="text-gray-500">{value || 'Not provided'}</span>
+        <button
+          onClick={() => startEditing(sponsor.id, field, value)}
+          className="ml-2 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Edit"
+        >
+          <Edit2 className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -193,11 +308,11 @@ export default function Sponsors() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {sponsor.email}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {sponsor.sponsor_id}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {renderEditableCell(sponsor, 'sponsor_id')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {sponsor.child_id}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {renderEditableCell(sponsor, 'child_id')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(sponsor.created_at).toLocaleDateString()}
@@ -258,11 +373,11 @@ export default function Sponsors() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {sponsor.email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {sponsor.sponsor_id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {renderEditableCell(sponsor, 'sponsor_id')}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {sponsor.child_id}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {renderEditableCell(sponsor, 'child_id')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {new Date(sponsor.created_at).toLocaleDateString()}
