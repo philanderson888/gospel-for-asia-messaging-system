@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, School } from 'lucide-react';
 
 type UserRole = 'administrator' | 'missionary' | 'sponsor' | 'bridge_of_hope';
 
@@ -61,7 +61,12 @@ export default function Register() {
   };
 
   const validateBridgeOfHopeId = () => {
-    if ((selectedRole !== 'missionary' && selectedRole !== 'bridge_of_hope') || !bridgeOfHopeId) return true;
+    if (selectedRole !== 'bridge_of_hope') return true;
+
+    if (!bridgeOfHopeId) {
+      toast.error('Bridge of Hope ID is required for Bridge of Hope Centers');
+      return false;
+    }
 
     if (!/^\d+$/.test(bridgeOfHopeId)) {
       toast.error('Bridge of Hope ID must contain only numbers');
@@ -81,9 +86,6 @@ export default function Register() {
     setLoading(true);
 
     try {
-      console.log('Registration requested for:', email);
-      console.log('Role requested:', selectedRole);
-
       if (!selectedRole) {
         throw new Error('Please select a role');
       }
@@ -93,7 +95,6 @@ export default function Register() {
         return;
       }
 
-      // First sign up the user
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -105,7 +106,6 @@ export default function Register() {
         throw new Error('User registration failed');
       }
 
-      // Add the user to authenticated_users table
       const { error: insertError } = await supabase
         .from('authenticated_users')
         .insert([
@@ -116,7 +116,7 @@ export default function Register() {
             is_missionary: selectedRole === 'missionary',
             is_sponsor: selectedRole === 'sponsor',
             is_bridge_of_hope: selectedRole === 'bridge_of_hope',
-            approved: null, // Needs admin approval
+            approved: null,
             approved_by: null,
             approved_date_time: null,
             sponsor_id: selectedRole === 'sponsor' ? sponsorId : null,
@@ -126,45 +126,47 @@ export default function Register() {
           }
         ]);
 
-      if (insertError) {
-        console.error('Error adding to authenticated_users:', insertError);
-        throw new Error('Failed to complete registration process');
-      }
+      if (insertError) throw new Error('Failed to complete registration process');
 
-      // Add the newly registered user to known users
       addKnownUser(email);
       
-      // Immediately sign out the user
       const { error: signOutError } = await supabase.auth.signOut();
       if (signOutError) {
         console.error('Error signing out:', signOutError);
       }
 
-      setLoading(false);
-      
       toast.success(
         selectedRole === 'administrator'
           ? 'Registration successful! Your administrator request is pending approval. Please sign in.'
           : 'Registration successful! Please sign in to continue.'
       );
       
-      // Navigate to login page
       navigate('/login');
     } catch (error: any) {
-      setLoading(false);
       toast.error(error.message);
-      console.error('Registration error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
+        <div className="text-center">
+          <div className="flex justify-center">
+            <School className="h-16 w-16 text-indigo-600" />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Bridge of Hope
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Join our mission to transform lives through Christ's love
+          </p>
+          <p className="mt-2 text-center text-xs text-gray-500">
+            "And whoever welcomes one such child in my name welcomes me." - Matthew 18:5
+          </p>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
@@ -269,7 +271,7 @@ export default function Register() {
                     name="bridge-of-hope-name"
                     id="bridge-of-hope-name"
                     className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    placeholder="Enter Bridge of Hope Center Name (optional)"
+                    placeholder="Enter Bridge of Hope Center Name"
                     value={bridgeOfHopeName}
                     onChange={(e) => setBridgeOfHopeName(e.target.value)}
                   />
@@ -285,16 +287,17 @@ export default function Register() {
                     type="text"
                     name="bridge-of-hope-id"
                     id="bridge-of-hope-id"
+                    required
                     pattern="[0-9]{1,8}"
                     maxLength={8}
                     className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    placeholder="Enter Bridge of Hope Center ID (optional)"
+                    placeholder="Enter Bridge of Hope Center ID"
                     value={bridgeOfHopeId}
                     onChange={(e) => setBridgeOfHopeId(e.target.value)}
                   />
                 </div>
                 <p className="mt-1 text-sm text-gray-500">
-                  Optional: Enter your Bridge of Hope Center ID (up to 8 digits)
+                  Required: Enter your Bridge of Hope Center ID (up to 8 digits)
                 </p>
               </div>
             </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
-import { LogIn } from 'lucide-react';
+import { LogIn, School } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -43,10 +43,16 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
+        <div className="text-center">
+          <div className="flex justify-center">
+            <School className="h-16 w-16 text-indigo-600" />
+          </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Bridge of Hope
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            "Let the little children come to me, and do not hinder them, for the kingdom of heaven belongs to such as these." - Matthew 19:14
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm -space-y-px">

@@ -44,7 +44,7 @@ The Mission Management System aims to modernize and streamline communication bet
    - Sign in with email and password
    - Access sponsor dashboard featuring:
      - Sponsored child's information
-     - Messaging interface
+     - Messaging interface with image support
      - Unread message notifications
      - Prayer focus section
      - Biblical encouragement
@@ -70,6 +70,7 @@ The Mission Management System aims to modernize and streamline communication bet
      - Message management interface
      - Child status monitoring
      - Sponsorship tracking
+     - Image-enabled messaging system
 
 ### For Administrators
 
@@ -83,10 +84,11 @@ The Mission Management System aims to modernize and streamline communication bet
 2. **After Approval**
    - Sign in with email and password
    - Access admin dashboard featuring:
-     - User management
+     - User management with inline editing
      - Approval workflows
      - System statistics
      - Bridge of Hope center management
+     - User role management
 
 ## 🛠️ Technical Architecture
 
@@ -134,7 +136,7 @@ src/
 │   ├── Sponsors.tsx          # Sponsor management
 │   └── Pending.tsx           # Pending approvals
 ├── services/
-│   ├── messageService.ts      # Message handling
+│   ├── messageService.ts      # Unified message handling
 │   ├── childService.ts        # Child data management
 │   └── bridgeOfHopeCenterService.ts # Center management
 └── types/
@@ -191,6 +193,7 @@ src/
 3. Missionary receives notification
 4. Missionary can view and respond
 5. Messages marked as read/unread
+6. Support for image attachments (up to 2 per message)
 
 ### Approval Workflow
 1. User registers
@@ -210,7 +213,7 @@ src/
 
 ### Sponsor Features
 - View sponsored child details
-- Send/receive messages
+- Send/receive messages with images
 - Track message history
 - Receive spiritual encouragement
 - Monitor communication status
@@ -220,14 +223,16 @@ src/
 - Monitor sponsorships
 - Facilitate communication
 - Track child status
-- Manage messages
+- Manage messages with images
+- View message history
 
 ### Administrator Features
-- User management
+- User management with inline editing
 - Approval workflows
 - System monitoring
 - Center management
 - Access control
+- Edit user details (Sponsor IDs, Child IDs, Center IDs)
 
 ## 🚀 Getting Started
 
@@ -296,62 +301,25 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - React team for the robust frontend framework
 - Open source community for various tools and libraries
 
-## 📋 Upcoming Features & Improvements
+## 📋 Latest Updates & Improvements
 
-### Child Biography System
-- [ ] Add detailed child profile pages
-  - Photo gallery
-  - Background information
-  - Academic progress
-  - Interests and aspirations
-  - Prayer requests
-- [ ] Real-time profile updates by missionaries
-- [ ] Secure access for sponsors and missionaries
-- [ ] Age-appropriate information display
+### Enhanced Message System
+- [x] Unified message service implementation
+- [x] Image support in messages (up to 2 images per message)
+- [x] Improved message display with image previews
+- [x] Better message organization and sorting
+- [x] Enhanced logging and monitoring
 
-### Enhanced Message Security
-- [ ] Message approval system for sponsor communications
-  - [ ] Manual admin approval workflow
-  - [ ] AI-powered content screening
-    - Automatic detection of personal information
-    - Social media handle detection
-    - Contact information screening
-    - Hyperlink validation
-    - Address and phone number detection
-- [ ] Direct message approval for child/missionary communications
-- [ ] Notification system for pending approvals
+### Admin Interface Improvements
+- [x] Inline editing for sponsor and missionary details
+- [x] Real-time validation for ID fields
+- [x] Enhanced user management capabilities
+- [x] Improved approval workflow
+- [x] Better data organization and display
 
-### Image Messaging System
-- [ ] Support for image attachments in messages
-  - One image per message policy
-  - Image size and format restrictions
-  - Automatic image screening
-- [ ] Admin approval workflow for sponsor-sent images
-- [ ] Image gallery for approved photos
-- [ ] Secure image storage and delivery
-
-### Database Improvements
-- [ ] Migration to production Supabase instance
-- [ ] Enhanced data models for new features
-- [ ] Optimization of database queries
-- [ ] Improved row-level security policies
-- [ ] Backup and recovery procedures
-
-### Mobile Application
-- [ ] React Native mobile app development
-  - iOS support
-  - Android support
-- [ ] Native device features integration
-  - Push notifications
-  - Camera integration
-  - Offline support
-- [ ] Mobile-specific UI/UX optimizations
-- [ ] App store deployment preparation
-
-### General Improvements
-- [ ] Performance optimization
-- [ ] Accessibility enhancements
-- [ ] Internationalization support
-- [ ] Enhanced error handling
-- [ ] Comprehensive testing suite
-- [ ] Documentation updates
+### Upcoming Features
+- [ ] Enhanced message filtering and search
+- [ ] Advanced reporting capabilities
+- [ ] Bulk message operations
+- [ ] Automated notifications
+- [ ] Enhanced mobile responsiveness

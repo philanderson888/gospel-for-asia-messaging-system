@@ -11,6 +11,7 @@ import Sponsors from './pages/Sponsors';
 import Messages from './pages/Messages';
 import Pending from './pages/Pending';
 import MissionaryDashboard from './pages/MissionaryDashboard';
+import TechSpecs from './pages/TechSpecs';
 import AuthProvider from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -91,6 +92,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <MissionaryDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tech-specs"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <TechSpecs />
                 </ProtectedRoute>
               }
             />

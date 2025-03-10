@@ -179,6 +179,16 @@ export default function Dashboard() {
                   Bridge of Hope
                 </span>
               </div>
+              {currentUser?.approved && currentUser?.is_administrator && (
+                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                  <Link
+                    to="/tech-specs"
+                    className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-700"
+                  >
+                    Tech Specs
+                  </Link>
+                </div>
+              )}
             </div>
             <div className="flex items-center">
               <button
