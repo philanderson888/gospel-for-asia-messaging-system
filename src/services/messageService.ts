@@ -1,6 +1,6 @@
 import { Message } from '../types/message';
 
-const STORAGE_KEY = 'sponsor_messages';
+const STORAGE_KEY = 'messages';
 
 // Initialize with sample messages if storage is empty
 const initializeMessages = () => {
@@ -23,7 +23,8 @@ const initializeMessages = () => {
         message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor. Here is a picture of the beautiful mountains near my home.',
         message_has_been_read: true,
         message_direction: 'to_child',
-        image01_url: 'https://picsum.photos/800/600?random=1'
+        image01_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
+        image02_url: null
       },
       {
         id: '2',
@@ -32,7 +33,8 @@ const initializeMessages = () => {
         message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. Here is a picture of me with my friends at the Bridge of Hope center.',
         message_has_been_read: true,
         message_direction: 'to_sponsor',
-        image01_url: 'https://picsum.photos/800/600?random=2'
+        image01_url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754',
+        image02_url: null
       },
       {
         id: '3',
@@ -41,8 +43,8 @@ const initializeMessages = () => {
         message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too. Here are some pictures of my family celebrating Christmas.',
         message_has_been_read: false,
         message_direction: 'to_child',
-        image01_url: 'https://picsum.photos/800/600?random=3',
-        image02_url: 'https://picsum.photos/800/600?random=4'
+        image01_url: 'https://images.unsplash.com/photo-1545622783-b3e021430fee',
+        image02_url: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa'
       }
     ];
 
@@ -56,7 +58,8 @@ const initializeMessages = () => {
 // Get all messages for a sponsor
 export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
   const messages = initializeMessages();
-  return messages.filter(message => message.sponsor_id === sponsorId)
+  return messages
+    .filter(message => message.sponsor_id === sponsorId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
@@ -95,23 +98,31 @@ export const markMessageAsRead = (messageId: string): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMessages));
 };
 
+// Reset all messages (for admin use)
+export const resetMessages = (): void => {
+  localStorage.removeItem(STORAGE_KEY);
+  initializeMessages();
+};
+
 // Log all messages to console
 export const logMessages = () => {
   const messages = initializeMessages();
-  console.log('\n=== Sponsor Messages in Local Storage ===');
+  console.log('\n=== Messages in Local Storage ===');
   messages.forEach(message => {
-    console.log(`\nMessage ID: ${message.id}`);
-    console.log(`From: ${message.message_direction === 'to_child' ? 'Sponsor' : 'Child'}`);
-    console.log(`Sponsor ID: ${message.sponsor_id}`);
-    console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
-    console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
-    console.log(`Text: ${message.message_text}`);
+    console.log('\nMessage Details:');
+    console.log('- ID:', message.id);
+    console.log('- Direction:', message.message_direction);
+    console.log('- Sponsor ID:', message.sponsor_id);
+    console.log('- Date:', new Date(message.created_at).toLocaleString());
+    console.log('- Read:', message.message_has_been_read ? 'Yes' : 'No');
+    console.log('- Text:', message.message_text);
     if (message.image01_url) {
-      console.log(`Image 1: ${message.image01_url}`);
+      console.log('- Image 1:', message.image01_url);
     }
     if (message.image02_url) {
-      console.log(`Image 2: ${message.image02_url}`);
+      console.log('- Image 2:', message.image02_url);
     }
   });
-  console.log('\n');
+  console.log('\nTotal messages:', messages.length);
+  console.log('==================\n');
 };

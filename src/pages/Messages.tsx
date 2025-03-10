@@ -4,7 +4,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Message } from '../types/message';
-import { getMessagesBySponsorId, addMessage, markMessageAsRead, logMessages } from '../services/sponsorMessageService';
+import { getMessagesBySponsorId, addMessage, markMessageAsRead, logMessages } from '../services/messageService';
 import { getChildBySponsorId } from '../services/childService';
 import toast from 'react-hot-toast';
 
