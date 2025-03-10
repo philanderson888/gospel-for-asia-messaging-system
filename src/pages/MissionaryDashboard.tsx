@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getCenterByMissionary } from '../services/bridgeOfHopeCenterService';
 import { getChildrenByCenter } from '../services/childService';
-import { logRecentMessagesForCenter } from '../services/bridgeOfHopeMessageService';
+import { logRecentMessagesForCenter } from '../services/messageService';
 import { Child } from '../types/child';
 import { BridgeOfHopeCenter } from '../types/bridgeOfHopeCenter';
 

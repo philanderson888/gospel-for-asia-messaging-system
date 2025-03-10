@@ -23,8 +23,7 @@ const initializeMessages = () => {
         message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor. Here is a picture of the beautiful mountains near my home.',
         message_has_been_read: true,
         message_direction: 'to_child',
-        image01_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
-        image02_url: null
+        image01_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b'
       },
       {
         id: '2',
@@ -33,8 +32,7 @@ const initializeMessages = () => {
         message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. Here is a picture of me with my friends at the Bridge of Hope center.',
         message_has_been_read: true,
         message_direction: 'to_sponsor',
-        image01_url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754',
-        image02_url: null
+        image01_url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754'
       },
       {
         id: '3',
@@ -61,6 +59,18 @@ export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
   return messages
     .filter(message => message.sponsor_id === sponsorId)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+};
+
+// Get messages for a Bridge of Hope center within the last 60 days
+export const getRecentMessagesByCenter = (bridgeOfHopeId: string): Message[] => {
+  const messages = getMessagesBySponsorId(bridgeOfHopeId);
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+  return messages.filter(message => {
+    const messageDate = new Date(message.created_at);
+    return messageDate >= sixtyDaysAgo;
+  });
 };
 
 // Get unread messages count for a sponsor
@@ -104,7 +114,7 @@ export const resetMessages = (): void => {
   initializeMessages();
 };
 
-// Log all messages to console
+// Log all messages
 export const logMessages = () => {
   const messages = initializeMessages();
   console.log('\n=== Messages in Local Storage ===');
@@ -123,6 +133,32 @@ export const logMessages = () => {
       console.log('- Image 2:', message.image02_url);
     }
   });
+  console.log('\nTotal messages:', messages.length);
+  console.log('==================\n');
+};
+
+// Log recent messages for a Bridge of Hope center
+export const logRecentMessagesForCenter = (bridgeOfHopeId: string) => {
+  const messages = getRecentMessagesByCenter(bridgeOfHopeId);
+  console.log(`\n=== Recent Messages (Last 60 Days) for Bridge of Hope Center ${bridgeOfHopeId} ===`);
+  
+  if (messages.length === 0) {
+    console.log('No messages found in the last 60 days');
+  } else {
+    messages.forEach(message => {
+      console.log('\nMessage Details:');
+      console.log('- Direction:', message.message_direction);
+      console.log('- Date:', new Date(message.created_at).toLocaleString());
+      console.log('- Text:', message.message_text);
+      console.log('- Read:', message.message_has_been_read ? 'Yes' : 'No');
+      if (message.image01_url) {
+        console.log('- Image 1:', message.image01_url);
+      }
+      if (message.image02_url) {
+        console.log('- Image 2:', message.image02_url);
+      }
+    });
+  }
   console.log('\nTotal messages:', messages.length);
   console.log('==================\n');
 };
