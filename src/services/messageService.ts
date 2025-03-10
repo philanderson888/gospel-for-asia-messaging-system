@@ -1,6 +1,6 @@
 import { Message } from '../types/message';
 
-const STORAGE_KEY = 'messages';
+const STORAGE_KEY = 'sponsor_messages';
 
 // Initialize with sample messages if storage is empty
 const initializeMessages = () => {
@@ -60,18 +60,6 @@ export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
-// Get messages for a Bridge of Hope center within the last 60 days
-export const getRecentMessagesByCenter = (bridgeOfHopeId: string): Message[] => {
-  const messages = initializeMessages();
-  const sixtyDaysAgo = new Date();
-  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-
-  return messages.filter(message => {
-    const messageDate = new Date(message.created_at);
-    return messageDate >= sixtyDaysAgo;
-  });
-};
-
 // Get unread messages count for a sponsor
 export const getUnreadMessagesCount = (sponsorId: string): number => {
   const messages = initializeMessages();
@@ -110,7 +98,7 @@ export const markMessageAsRead = (messageId: string): void => {
 // Log all messages to console
 export const logMessages = () => {
   const messages = initializeMessages();
-  console.log('\n=== Messages in Local Storage ===');
+  console.log('\n=== Sponsor Messages in Local Storage ===');
   messages.forEach(message => {
     console.log(`\nMessage ID: ${message.id}`);
     console.log(`From: ${message.message_direction === 'to_child' ? 'Sponsor' : 'Child'}`);
@@ -125,31 +113,5 @@ export const logMessages = () => {
       console.log(`Image 2: ${message.image02_url}`);
     }
   });
-  console.log('\n');
-};
-
-// Log recent messages for a Bridge of Hope center
-export const logRecentMessagesForCenter = (bridgeOfHopeId: string) => {
-  const messages = getRecentMessagesByCenter(bridgeOfHopeId);
-  console.log(`\n=== Recent Messages (Last 60 Days) for Bridge of Hope Center ${bridgeOfHopeId} ===`);
-  
-  if (messages.length === 0) {
-    console.log('No messages found in the last 60 days');
-  } else {
-    messages.forEach(message => {
-      console.log(`\nMessage ID: ${message.id}`);
-      console.log(`Direction: ${message.message_direction}`);
-      console.log(`Sponsor ID: ${message.sponsor_id}`);
-      console.log(`Date: ${new Date(message.created_at).toLocaleString()}`);
-      console.log(`Read: ${message.message_has_been_read ? 'Yes' : 'No'}`);
-      console.log(`Text: ${message.message_text}`);
-      if (message.image01_url) {
-        console.log(`Image 1: ${message.image01_url}`);
-      }
-      if (message.image02_url) {
-        console.log(`Image 2: ${message.image02_url}`);
-      }
-    });
-  }
   console.log('\n');
 };
