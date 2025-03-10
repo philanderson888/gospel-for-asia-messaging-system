@@ -11,7 +11,7 @@ const initializeCenters = (): BridgeOfHopeCenter[] => {
         {
           id: '1',
           center_id: '57890123',
-          name: 'Bridge of Hope Center 02',
+          name: 'Marasala, India',
           created_at: new Date().toISOString()
         }
       ];

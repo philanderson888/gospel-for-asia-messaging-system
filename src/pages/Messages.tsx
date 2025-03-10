@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, Image, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Message } from '../types/message';
-import { getMessagesBySponsorId, addMessage, markMessageAsRead, logMessages } from '../services/messageService';
+import { getMessagesBySponsorId, addMessage, markMessageAsRead } from '../services/messageService';
 import { getChildBySponsorId } from '../services/childService';
 import toast from 'react-hot-toast';
 
@@ -21,6 +21,8 @@ export default function Messages() {
   const { sponsorId } = useParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [imageUrl1, setImageUrl1] = useState('');
+  const [imageUrl2, setImageUrl2] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<AuthenticatedUser | null>(null);
   const [childName, setChildName] = useState<string>('');
@@ -30,7 +32,6 @@ export default function Messages() {
       if (!user) return;
 
       try {
-        // Get the user's details
         const { data: userData, error: userError } = await supabase
           .from('authenticated_users')
           .select('sponsor_id, is_sponsor, is_missionary, bridge_of_hope_id')
@@ -40,32 +41,11 @@ export default function Messages() {
         if (userError) throw userError;
         setCurrentUser(userData);
 
-        // Load messages based on context
         const targetSponsorId = sponsorId || userData.sponsor_id;
         if (targetSponsorId) {
-          // Load messages
           const sponsorMessages = getMessagesBySponsorId(targetSponsorId);
           setMessages(sponsorMessages);
 
-          // Log messages for this sponsor
-          console.log('\n=== Messages for Sponsor ID:', targetSponsorId, '===');
-          sponsorMessages.forEach(message => {
-            console.log('\nMessage Details:');
-            console.log('- Direction:', message.message_direction);
-            console.log('- Date:', new Date(message.created_at).toLocaleString());
-            console.log('- Text:', message.message_text);
-            console.log('- Read:', message.message_has_been_read ? 'Yes' : 'No');
-            if (message.image01_url) {
-              console.log('- Image 1:', message.image01_url);
-            }
-            if (message.image02_url) {
-              console.log('- Image 2:', message.image02_url);
-            }
-          });
-          console.log('\nTotal messages:', sponsorMessages.length);
-          console.log('==================\n');
-
-          // Get child's name if viewing as missionary
           if (userData.is_missionary) {
             const child = getChildBySponsorId(targetSponsorId);
             if (child) {
@@ -73,12 +53,9 @@ export default function Messages() {
             }
           }
 
-          // Mark unread messages as read if viewing own messages
-          if (!sponsorId) {
-            sponsorMessages
-              .filter(m => !m.message_has_been_read)
-              .forEach(m => markMessageAsRead(m.id));
-          }
+          sponsorMessages
+            .filter(m => !m.message_has_been_read)
+            .forEach(m => markMessageAsRead(m.id));
         }
 
       } catch (error) {
@@ -91,6 +68,16 @@ export default function Messages() {
 
     loadUserAndMessages();
   }, [user, sponsorId]);
+
+  const validateImageUrl = (url: string): boolean => {
+    if (!url) return true; // Empty URL is valid (optional)
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const handleSendMessage = () => {
     const targetSponsorId = sponsorId || currentUser?.sponsor_id;
@@ -109,24 +96,31 @@ export default function Messages() {
       return;
     }
 
+    if (imageUrl1 && !validateImageUrl(imageUrl1)) {
+      toast.error('First image URL is invalid');
+      return;
+    }
+
+    if (imageUrl2 && !validateImageUrl(imageUrl2)) {
+      toast.error('Second image URL is invalid');
+      return;
+    }
+
     try {
       const message = addMessage({
         sponsor_id: targetSponsorId,
         message_text: newMessage,
         message_has_been_read: false,
-        message_direction: currentUser?.is_missionary ? 'to_sponsor' : 'to_child'
+        message_direction: currentUser?.is_missionary ? 'to_sponsor' : 'to_child',
+        image01_url: imageUrl1 || undefined,
+        image02_url: imageUrl2 || undefined
       });
 
       setMessages(prev => [message, ...prev]);
       setNewMessage('');
+      setImageUrl1('');
+      setImageUrl2('');
       toast.success('Message sent successfully');
-
-      // Log the new message
-      console.log('\n=== New Message Sent ===');
-      console.log('- Direction:', message.message_direction);
-      console.log('- Date:', new Date(message.created_at).toLocaleString());
-      console.log('- Text:', message.message_text);
-      console.log('==================\n');
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
@@ -172,7 +166,7 @@ export default function Messages() {
               <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
                 Write a New Message
               </label>
-              <div className="relative">
+              <div className="space-y-4">
                 <textarea
                   id="message"
                   rows={4}
@@ -184,7 +178,63 @@ export default function Messages() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                 />
-                <div className="mt-4 mb-4 flex items-center justify-between">
+
+                {/* Image URL inputs */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Image URL 1 (optional)
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-grow relative">
+                        <input
+                          type="url"
+                          value={imageUrl1}
+                          onChange={(e) => setImageUrl1(e.target.value)}
+                          placeholder="Enter image URL"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pr-8"
+                        />
+                        {imageUrl1 && (
+                          <button
+                            onClick={() => setImageUrl1('')}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <Image className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Image URL 2 (optional)
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <div className="flex-grow relative">
+                        <input
+                          type="url"
+                          value={imageUrl2}
+                          onChange={(e) => setImageUrl2(e.target.value)}
+                          placeholder="Enter image URL"
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm pr-8"
+                        />
+                        {imageUrl2 && (
+                          <button
+                            onClick={() => setImageUrl2('')}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                      <Image className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
                   <span className={`text-sm ${newMessage.length > 200 ? 'text-red-500' : 'text-gray-500'}`}>
                     {newMessage.length}/200 characters
                   </span>

@@ -16,11 +16,12 @@ const initializeMessages = () => {
     yesterday.setDate(yesterday.getDate() - 1);
 
     const sampleMessages: Message[] = [
+      // Messages for first child (sponsor_id: 12345678)
       {
         id: '1',
         sponsor_id: '12345678',
         created_at: threeDaysAgo.toISOString(),
-        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day and I am so grateful to be your sponsor. Here is a picture of the beautiful mountains near my home.',
+        message_text: 'Dear child, I hope this message finds you well. I am writing to let you know that I pray for you every day. Here is a picture of the beautiful mountains near my home.',
         message_has_been_read: true,
         message_direction: 'to_child',
         image01_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b'
@@ -29,20 +30,30 @@ const initializeMessages = () => {
         id: '2',
         sponsor_id: '12345678',
         created_at: twoDaysAgo.toISOString(),
-        message_text: 'Dear sponsor, thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. Here is a picture of me with my friends at the Bridge of Hope center.',
+        message_text: 'Thank you for your kind message. I am doing well in my studies and I especially enjoy learning mathematics. Here is a picture from our school celebration.',
         message_has_been_read: true,
         message_direction: 'to_sponsor',
         image01_url: 'https://images.unsplash.com/photo-1577896851231-70ef18881754'
       },
+      // Messages for second child (sponsor_id: 23456789)
       {
         id: '3',
-        sponsor_id: '12345678',
-        created_at: yesterday.toISOString(),
-        message_text: 'I am so happy to hear that you enjoy mathematics! That was my favorite subject in school too. Here are some pictures of my family celebrating Christmas.',
-        message_has_been_read: false,
+        sponsor_id: '23456789',
+        created_at: threeDaysAgo.toISOString(),
+        message_text: 'Hello! I am so happy to be your sponsor. I pray for you and your family every day. Here are some pictures from our garden.',
+        message_has_been_read: true,
         message_direction: 'to_child',
-        image01_url: 'https://images.unsplash.com/photo-1545622783-b3e021430fee',
-        image02_url: 'https://images.unsplash.com/photo-1513297887119-d46091b24bfa'
+        image01_url: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae',
+        image02_url: 'https://images.unsplash.com/photo-1557429287-b2e26467fc2b'
+      },
+      {
+        id: '4',
+        sponsor_id: '23456789',
+        created_at: yesterday.toISOString(),
+        message_text: 'Dear sponsor, thank you for your message and beautiful garden pictures! I love learning about plants in science class. Here is a picture of my science project.',
+        message_has_been_read: false,
+        message_direction: 'to_sponsor',
+        image01_url: 'https://images.unsplash.com/photo-1596495578065-6e0763fa1178'
       }
     ];
 

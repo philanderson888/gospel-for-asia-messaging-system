@@ -16,6 +16,15 @@ const initializeChildren = (): Child[] => {
           bridge_of_hope_center_id: '57890123',
           sponsor_id: '12345678',
           created_at: new Date().toISOString()
+        },
+        {
+          id: '2',
+          child_id: '2345678901',
+          name: 'Mary Johnson',
+          date_of_birth: '2016-03-22',
+          bridge_of_hope_center_id: '57890123',
+          sponsor_id: '23456789',
+          created_at: new Date().toISOString()
         }
       ];
 
