@@ -63,14 +63,16 @@ export const getMessagesBySponsorId = (sponsorId: string): Message[] => {
 
 // Get messages for a Bridge of Hope center within the last 60 days
 export const getRecentMessagesByCenter = (bridgeOfHopeId: string): Message[] => {
-  const messages = getMessagesBySponsorId(bridgeOfHopeId);
+  const messages = initializeMessages();
   const sixtyDaysAgo = new Date();
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-  return messages.filter(message => {
-    const messageDate = new Date(message.created_at);
-    return messageDate >= sixtyDaysAgo;
-  });
+  return messages
+    .filter(message => {
+      const messageDate = new Date(message.created_at);
+      return messageDate >= sixtyDaysAgo;
+    })
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 };
 
 // Get unread messages count for a sponsor
