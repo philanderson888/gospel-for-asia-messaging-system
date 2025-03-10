@@ -4,7 +4,7 @@ import { ArrowLeft, Send } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { Message } from '../types/message';
-import { getMessagesBySponsorId, addMessage, markMessageAsRead } from '../services/sponsorMessageService';
+import { getMessagesBySponsorId, addMessage, markMessageAsRead, logMessages } from '../services/sponsorMessageService';
 import { getChildBySponsorId } from '../services/childService';
 import toast from 'react-hot-toast';
 
@@ -46,6 +46,24 @@ export default function Messages() {
           // Load messages
           const sponsorMessages = getMessagesBySponsorId(targetSponsorId);
           setMessages(sponsorMessages);
+
+          // Log messages for this sponsor
+          console.log('\n=== Messages for Sponsor ID:', targetSponsorId, '===');
+          sponsorMessages.forEach(message => {
+            console.log('\nMessage Details:');
+            console.log('- Direction:', message.message_direction);
+            console.log('- Date:', new Date(message.created_at).toLocaleString());
+            console.log('- Text:', message.message_text);
+            console.log('- Read:', message.message_has_been_read ? 'Yes' : 'No');
+            if (message.image01_url) {
+              console.log('- Image 1:', message.image01_url);
+            }
+            if (message.image02_url) {
+              console.log('- Image 2:', message.image02_url);
+            }
+          });
+          console.log('\nTotal messages:', sponsorMessages.length);
+          console.log('==================\n');
 
           // Get child's name if viewing as missionary
           if (userData.is_missionary) {
@@ -102,6 +120,13 @@ export default function Messages() {
       setMessages(prev => [message, ...prev]);
       setNewMessage('');
       toast.success('Message sent successfully');
+
+      // Log the new message
+      console.log('\n=== New Message Sent ===');
+      console.log('- Direction:', message.message_direction);
+      console.log('- Date:', new Date(message.created_at).toLocaleString());
+      console.log('- Text:', message.message_text);
+      console.log('==================\n');
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
@@ -201,6 +226,24 @@ export default function Messages() {
                         : message.message_direction === 'to_child' ? 'You' : 'Your Sponsored Child'}
                     </div>
                     <div className="text-sm">{message.message_text}</div>
+                    {(message.image01_url || message.image02_url) && (
+                      <div className="mt-2 flex gap-2">
+                        {message.image01_url && (
+                          <img
+                            src={message.image01_url}
+                            alt="Message attachment 1"
+                            className="rounded-md max-w-[200px] h-auto"
+                          />
+                        )}
+                        {message.image02_url && (
+                          <img
+                            src={message.image02_url}
+                            alt="Message attachment 2"
+                            className="rounded-md max-w-[200px] h-auto"
+                          />
+                        )}
+                      </div>
+                    )}
                     <div className="text-xs text-gray-500 mt-2">
                       {new Date(message.created_at).toLocaleString()}
                     </div>
